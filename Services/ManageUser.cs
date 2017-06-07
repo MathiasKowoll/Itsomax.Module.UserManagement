@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Itsomax.Module.Core.Models;
 using System;
+using Itsomax.Module.UserManagement.ViewModels;
 
 namespace Itsomax.Module.UserManagement.Services
 {
@@ -11,11 +12,14 @@ namespace Itsomax.Module.UserManagement.Services
     {
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<Role> _roleManager;
+        private readonly SignInManager<User> _signIn;
 
-        public ManageUser(UserManager<User> userManager,RoleManager<Role> roleManager)
+        public ManageUser(UserManager<User> userManager,RoleManager<Role> roleManager,SignInManager<User> signIn)
         {
             _roleManager = roleManager;
             _userManager = userManager;
+            _signIn = signIn;
+
         }
 
         public async Task<SucceededTask> CreateUser(string userName, string email, string password, params string[] roles)
@@ -76,6 +80,27 @@ namespace Itsomax.Module.UserManagement.Services
             {
                 return SucceededTask.Failed("ErrorUserEdit");
             }
+        }
+        public async Task<SucceededTask> LoginUser(LoginUserViewModel model)
+        {
+            var user = _userManager.FindByNameAsync(model.UserName).Result;
+            if(user!=null)
+            {
+                var res = await _signIn.PasswordSignInAsync(user,model.Password,model.RememberMe,true);
+                if(res.Succeeded)
+                {
+                    return SucceededTask.Success;
+                }
+                else
+                {
+                    return SucceededTask.Failed("ErrorLogin");
+                }
+            }
+            else
+            {
+                return SucceededTask.Failed("WrongUserPassword");
+            }
+            
         }
     }
 }
