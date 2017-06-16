@@ -1,0 +1,98 @@
+@model EditUserViewModel
+<br>
+<div class="row">
+  <div class="col-md-10 col-md-offset-1">
+    <div class="box box-primary">
+      <div class="box-header with-border">
+        <h3 class="box-title">Edit User</h3>
+        <br>
+      </div>
+      <form class="form-horizontal" asp-controller="UserManagement" asp-action="EditUserPostView" method="Post">
+        <div class="box-body">
+          <div class="form-group">
+              <div class="col-md-3">
+                <input asp-for="Id" type="hidden" class="form-control" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-md-3 control-label" asp-for="UserName"></label>
+            <div class="col-md-3">
+                <input asp-for="UserName" class="form-control" />
+            </div>
+            <div class="col-md-6">
+              <span asp-validation-for="UserName" class="text-danger"></span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-md-3 control-label" asp-for="Email"></label>
+            <div class="col-md-3">
+                <input asp-for="Email" class="form-control" />
+            </div>
+            <div class="col-md-6">
+              <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-md-3 control-label" asp-for="IsLocked"></label>
+            <div class="col-md-3">
+                <input class="switchery" type="checkbox" asp-for="IsLocked" class="form-control" />
+            </div>
+            <div class="col-md-6">
+              <span asp-validation-for="IsLocked" class="text-danger"></span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-md-3 control-label" asp-for="IsDeleted"></label>
+            <div class="col-md-3">
+                <input class="switchery" type="checkbox" asp-for="IsDeleted" class="form-control" />
+            </div>
+            <div class="col-md-6">
+              <span asp-validation-for="IsDeleted" class="text-danger"></span>
+            </div>
+          </div>
+          <div class="box-header with-border">
+            <h3 class="box-title">Assign Roles</h3>
+            <br>
+          </div>
+           <div class="form-group">
+             <div class="col-md-offset-3"></div>
+             @foreach (var item in Model.RolesList)
+             {
+                <label class="col-md-2 control-label">@item.Value</label>
+                <div class="col-md-1 checkbox checkbox-switchery switchery-sm checkbox-right">
+                  <label>
+                      <input class="switchery" type="checkbox" name="SelectedRoles" value="@item.Value" checked="@item.Selected" />
+                  </label>
+                </div>
+              }
+          </div>
+          <div class="form-group">
+            <div class="col-md-offset-5 col-md-4">
+                <a asp-controller="UserManagement" asp-action="ListActiveUsers" class="btn btn-default">Cancel</a>
+                <button type="submit" class="btn btn-default">Save</button>
+            </div>
+        </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+@section scripts{
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+  <script>
+    if (Array.prototype.forEach) {
+      var elems = Array.prototype.slice.call(document.querySelectorAll('.switchery'));
+      elems.forEach(function(html) {
+      var switchery = new Switchery(html);
+      });
+    }
+    else {
+      var elems = document.querySelectorAll('.switchery');
+      for (var i = 0; i < elems.length; i++) {
+        var switchery = new Switchery(elems[i]);
+      }
+    }
+  </script>
+}

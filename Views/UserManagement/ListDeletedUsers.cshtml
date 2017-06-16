@@ -1,0 +1,142 @@
+<div class="row">
+    <div class="col-xs-12">
+        <div class="box">
+            <div class="box-header">
+                <h3 class="box-title">List all deleted users</h3>
+                <br>
+            </div>
+            <div class="box-body">
+                <div id='events'></div>
+                <table id="users" class="table table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>UserName</th>
+                            <th>Email</th>
+                            <th>Updated</th>
+                        </tr>
+                    </thead>
+                    <!--
+                    <tfoot>
+                        <tr>
+                            <th>Id</th>
+                            <th>UserName</th>
+                            <th>Email</th>
+                            <th>Updated</th>
+                        </tr>
+                    </tfoot>
+                    -->
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    <script src="https://cdn.datatables.net/select/1.2.2/js/dataTables.select.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.3.1/js/dataTables.buttons.min.js"></script>
+    <script>
+        $(document).ready(function() {
+                var table =$('#users').DataTable({
+                    dom: 'Bfrtip',
+                    ajax: {
+                        url: '/get/all/deleted/users/json/',
+                        dataSrc: ''
+                    },
+                    "columns": [
+                        { "data": "id" },
+                        { "data": "userName" },
+                        { "data": "email" },
+                        { "data": "updated" },
+                    ],
+                    paging: true,
+                    lengthChange: false,
+                    searching: false,
+                    ordering: true,
+                    info: true,
+                    autoWidth: false,
+                    columnDefs: [
+                    {
+                        targets: [ 0 ],
+                        visible: false,
+                        searchable: false
+                    }
+                    ],
+                    select: {
+                            style: 'single'
+                        },
+                    buttons: [
+                            {
+                                text: 'Delete',
+                                action: function (e, dt, node, config) {
+                                    var rowData= dt.row( { selected: true } ).data()
+
+                                    if(rowData == null)
+                                    {
+                                            $.alert({
+                                                title: 'No user selected!',
+                                                content: 'No user has been selected, to continue please select an user.',
+                                            });
+                                    }
+                                    else
+                                    {
+                                        $.confirm({
+                                            title: 'Permanently delete user',
+                                            content: 'Are you sure do you want to permanently delete: '+rowData.userName+'?',
+                                            buttons: {
+                                                        confirm: function () {
+                                                            $.ajax({
+                                                                url: '/UserManagement/DeletePermanentlyUserPostView/'+rowData.id,
+                                                                type: 'DELETE',
+                                                                success: function (obj) {
+                                                                    //alert("Sucess");
+                                                                    table.ajax.reload();
+                                                                },
+                                                                error:function(obj){
+                                                                    //alert('Failed');
+                                                                }
+                                                            });
+                                                        },
+                                                        cancel: function () {
+                                                            table.ajax.reload();
+                                                        }
+                                        }                                                
+                                        });
+                                    }
+                                },
+                                enabled: false
+                            },
+                            {
+                                text: 'Edit', 
+                                action: function (e, dt, node, config) {
+                                    var rowData= dt.row( { selected: true } ).data()
+                                    if(rowData == null)
+                                    {
+                                        $.alert({
+                                            title: 'No user selected!',
+                                            content: 'No user has been selected, to continue please select an user.',
+                                        });
+                                    }
+                                    else
+                                    {
+                                    window.location.href = '/get/user/'+rowData.id
+                                    //'/get/user/'+rowData.id
+                                    }
+                                },
+                                enabled: false 
+                            }
+                        ]
+                    });
+                    table.on( 'select', function () {
+                        var selectedRows = table.rows( { selected: true } ).count();
+                        table.button( 0 ).enable( selectedRows == 1 );
+                        table.button( 1 ).enable( selectedRows == 1 );
+                    } );
+                    table.on( 'deselect',function() {
+                        //var unselectedRows = table.rows( {selected: false} ).count();
+                        table.button( 0 ).disable();
+                        table.button( 1 ).disable();
+                    });
+        });
+    </script>
+}
