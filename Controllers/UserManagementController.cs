@@ -104,6 +104,8 @@ namespace Itsomax.Module.UserManagement.Controllers
                 {
                     return NotFound();
                 }
+                _manageUser.CreateUserAddDefaultClaim(user.Id);
+                _manageUser.UpdateClaimValueForRole();
                 var res = await _signIn.PasswordSignInAsync(user,model.Password,model.RememberMe,true);
                 if (res.Succeeded)
                 {
@@ -300,6 +302,38 @@ namespace Itsomax.Module.UserManagement.Controllers
             });
             return Json(user);
 
+        }
+
+        public IActionResult ChangePasswordView()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult ChangePasswordPostView(ChangePasswordViewModel model)
+        {
+            var currentUser = _user.GetUserAsync(_httpContext.HttpContext.User).Result;
+            var res = _user.ChangePasswordAsync(currentUser, model.CurrentPassword, model.NewPassword).Result;
+            if(res.Succeeded)
+            {
+                return Json(true);
+            }
+            else
+            {
+                return Json(false);
+            }
+
+        }
+
+        public IActionResult ChangePasswordUserView()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult ChangePasswordUserPostView()
+        {
+            return Json(true);
         }
 
         #region Helpers
