@@ -1,4 +1,4 @@
-@model CreateRoleViewModel
+﻿@model EditRoleViewModel
 
 <br>
 <div class="row">
@@ -7,15 +7,20 @@
             <div class="box-header with-border">
                 <h3 class="box-title">Create Role</h3>
                 <br>
-                <form class="form-horizontal" asp-controller="RoleManagement" asp-action="CreateRolePostView" method="Post">
+                <form class="form-horizontal" asp-controller="RoleManagement" asp-action="EditRolePostView" method="Post">
                     <div class="box-body">
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <input asp-for="Id" type="hidden" class="form-control" />
+                            </div>
+                        </div>
                         <div class="form-group">
                             <label class="col-md-3 control-label" asp-for="RoleName"></label>
                             <div class="col-md-3">
                                 <input asp-for="RoleName" class="form-control" />
                             </div>
                             <div class="col-md-6">
-                            <span asp-validation-for="RoleName" class="text-danger"></span>
+                                <span asp-validation-for="RoleName" class="text-danger"></span>
                             </div>
                         </div>
                         <div class="form-group">
@@ -24,16 +29,16 @@
                             {
                                 <label class="col-md-2 control-label">@item.Value</label>
                                 <div class="col-md-1 checkbox checkbox-switchery switchery-sm checkbox-right">
-                                <label>
-                                    <input class="switchery" type="checkbox" name="selectedModules" value="@item.Value"/>
-                                </label>
+                                    <label>
+                                        <input class="switchery" type="checkbox" name="selectedModules" value="@item.Value" checked="@item.Selected"/>
+                                    </label>
                                 </div>
                             }
                         </div>
                         <div class="form-group">
                             <div class="col-md-offset-5 col-md-4">
                                 <a asp-controller="RoleManagement" asp-action="ListRoles" class="btn btn-default">Cancel</a>
-                                 <button type="submit" class="btn btn-default">Save</button>
+                                <button type="submit" class="btn btn-default">Save</button>
                             </div>
                         </div>
                     </div>
@@ -45,7 +50,7 @@
 
 @section scripts{
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
-  <script>
+    <script>
     if (Array.prototype.forEach) {
       var elems = Array.prototype.slice.call(document.querySelectorAll('.switchery'));
       elems.forEach(function(html) {
@@ -58,5 +63,5 @@
         var switchery = new Switchery(elems[i]);
       }
     }
-  </script>
-}
+    </script>
+    }

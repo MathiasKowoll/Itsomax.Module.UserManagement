@@ -25,8 +25,8 @@ namespace Itsomax.Module.UserManagement.Services
         private readonly IRepository<SubModule> _subModule;
         private readonly IRepository<ModuleRole> _moduleRole;
 
-        public ManageUser(UserManager<User> userManager,RoleManager<Role> roleManager,SignInManager<User> signIn,
-                         IRepository<Role> role,IRepository<User> user,IRepository<SubModule> subModule,
+        public ManageUser(UserManager<User> userManager, RoleManager<Role> roleManager, SignInManager<User> signIn,
+                         IRepository<Role> role, IRepository<User> user, IRepository<SubModule> subModule,
                          IRepository<ModuleRole> moduleRole)
         {
             _roleManager = roleManager;
@@ -39,7 +39,7 @@ namespace Itsomax.Module.UserManagement.Services
 
         }
 
-        public async Task<SucceededTask> CreateUser(CreateUserViewModel model,params string[] selectedRoles)
+        public async Task<SucceededTask> CreateUser(CreateUserViewModel model, params string[] selectedRoles)
         {
             var user = new User()
             {
@@ -48,14 +48,14 @@ namespace Itsomax.Module.UserManagement.Services
             };
             var resUser = _userManager.CreateAsync(user, model.Password).Result;
             //var dummy =resUser.AsyncState.ToString();
-            if(resUser.Succeeded)
+            if (resUser.Succeeded)
             {
                 //await _userManager.SetLockoutEnabledAsync(user, true);
                 var resRole = _userManager.AddToRolesAsync(user, selectedRoles).Result;
-                if(resRole.Succeeded)
+                if (resRole.Succeeded)
                 {
                     var resClaim = CreateUserAddDefaultClaim(user.Id);
-                    if(resClaim)
+                    if (resClaim)
                     {
                         UpdateClaimValueForRole();
                     }
@@ -78,7 +78,7 @@ namespace Itsomax.Module.UserManagement.Services
         {
             var user = await _userManager.FindByIdAsync(Id.ToString());
             var resDelUSer = await _userManager.DeleteAsync(user);
-            if(resDelUSer.Succeeded)
+            if (resDelUSer.Succeeded)
             {
                 return SucceededTask.Success;
             }
@@ -87,17 +87,17 @@ namespace Itsomax.Module.UserManagement.Services
                 return SucceededTask.Failed("ErrorUserDelete");
             }
         }
-        public async Task<SucceededTask> EditUser(EditUserViewModel model,params string[] rolesAdd)
+        public async Task<SucceededTask> EditUser(EditUserViewModel model, params string[] rolesAdd)
         {
             var user = _userManager.FindByIdAsync(model.Id.ToString()).Result;
-            
+
             user.Email = model.Email;
             user.UserName = model.UserName;
             user.IsDeleted = model.IsDeleted;
 
 
             var res = await _userManager.UpdateAsync(user);
-            if(res.Succeeded)
+            if (res.Succeeded)
             {
                 var rolesRemove = _userManager.GetRolesAsync(user).Result;
                 var resDel = await _userManager.RemoveFromRolesAsync(user, rolesRemove);
@@ -106,13 +106,26 @@ namespace Itsomax.Module.UserManagement.Services
                     var resAdd = await _userManager.AddToRolesAsync(user, rolesAdd);
                     if (resAdd.Succeeded)
                     {
-                        var resL = _userManager.SetLockoutEndDateAsync(user,Convert.ToDateTime("3000-01-01")).Result;
-                        if (resL.Succeeded)
+                        if(model.IsLocked==true)
                         {
-                            return SucceededTask.Success;
+                            var resL = _userManager.SetLockoutEndDateAsync(user, Convert.ToDateTime("3000-01-01")).Result;
+                            if (resL.Succeeded)
+                            {
+                                return SucceededTask.Success;
+                            }
+                            else
+                                return SucceededTask.Failed("ErrorUserEdit");
                         }
                         else
-                            return SucceededTask.Failed("ErrorUserEdit");
+                        {
+                            var resL = _userManager.SetLockoutEndDateAsync(user, Convert.ToDateTime("1970-01-01")).Result;
+                            if (resL.Succeeded)
+                            {
+                                return SucceededTask.Success;
+                            }
+                            else
+                                return SucceededTask.Failed("ErrorUserEdit");
+                        }
                         
                     }
                     else
@@ -128,6 +141,54 @@ namespace Itsomax.Module.UserManagement.Services
             }
         }
 
+        public async Task<SucceededTask> EditRole(EditRoleViewModel model, params string [] subModulesAdd)
+        {
+            var role = _roleManager.FindByIdAsync(model.Id.ToString()).Result;
+            role.Name = model.RoleName;
+
+            var res = await _roleManager.UpdateAsync(role);
+            if (res.Succeeded)
+            {
+                AddSubModulesToRole(role.Id,subModulesAdd);
+                return SucceededTask.Success;
+            }
+            else
+                return SucceededTask.Failed("FailedUpdateRole");
+
+        }
+
+        public void AddSubModulesToRole (long RoleId,params string[] subModules)
+        {
+            var modRole = _moduleRole.Query().Where(x => x.RoleId == RoleId);
+            foreach (var item in modRole)
+            {
+                var modrole = _moduleRole.Query().FirstOrDefault(x => x.RoleId == item.RoleId && x.SubModuleId == item.SubModuleId);
+                //ModuleRole modrole = new ModuleRole
+                //{
+                //    RoleId = item.RoleId,
+                //    SubModuleId = item.SubModuleId
+                //};
+                _moduleRole.Remove(modrole);
+            }
+            _moduleRole.SaveChange();
+
+            foreach (var item in subModules)
+            {
+                var mod = _subModule.Query().FirstOrDefault(x => x.Name.Contains(item));
+                ModuleRole modrole = new ModuleRole
+                {
+                    RoleId = RoleId,
+                    SubModuleId = mod.Id
+                };
+                _moduleRole.Add(modrole);
+                
+            }
+            _moduleRole.SaveChange();
+            UpdateClaimValueForRole();
+        }
+
+
+
         public IEnumerable<SelectListItem> GetUserRolesToSelectListItem(int UserId)
         {
             var user = _userManager.FindByIdAsync(UserId.ToString()).Result;
@@ -141,6 +202,37 @@ namespace Itsomax.Module.UserManagement.Services
 
             return roles;
         }
+        
+        public IEnumerable<SelectListItem> GetRoleModulesToSelectListItem(long RoleId)
+        {
+            var role = _roleManager.FindByIdAsync(RoleId.ToString()).Result;
+            var subModuleRole = GetSubmodulesByRoleId(role.Id);
+            var subModule = _subModule.Query().ToList().Select(x=> new SelectListItem
+            {
+                Selected = subModuleRole.Contains(x.Name),
+                Text = x.Name,
+                Value = x.Name
+            });
+
+            return (subModule);
+        }
+        
+
+        //public IList<string> GetSubmodules()
+        //{
+        //    return(_subModule.Query().Select(x => x.Name)).ToList();
+        //}
+
+        public IList<string> GetSubmodulesByRoleId(long Id)
+        {
+            var subModRole =
+                from mr in _moduleRole.Query().ToList()
+                join sb in _subModule.Query().ToList() on mr.SubModuleId equals sb.Id
+                where mr.RoleId == Id
+                select (sb.Name);
+
+            return (subModRole.ToList());
+        }
 
         public bool CreateUserAddDefaultClaim(long Id)
         {
@@ -150,26 +242,26 @@ namespace Itsomax.Module.UserManagement.Services
             var claimsRemove = new List<Claim>();
 
             //claims.Add(new Claim("", ""));
-            var claimsList = _subModule.Query().Select(x => new 
+            var claimsList = _subModule.Query().Select(x => new
             {
                 x.Name
-                 
+
             }).ToList();
             var claimExistDB = _userManager.GetClaimsAsync(user).Result;
-            foreach(var item in claimsList)
+            foreach (var item in claimsList)
             {
                 var claimExistDBType = claimExistDB.FirstOrDefault(x => x.Type == item.Name);
-                if(claimExistDB.Count == 0)
+                if (claimExistDB.Count == 0)
                 {
                     claims.Add(new Claim(item.Name, "NoAccess"));
                 }
 
             }
-            var res = _userManager.AddClaimsAsync(user,claims).Result;
-            foreach(var item in claimExistDB)
+            var res = _userManager.AddClaimsAsync(user, claims).Result;
+            foreach (var item in claimExistDB)
             {
                 var claimExistsDll = claimsList.FirstOrDefault(x => x.Name == item.Type);
-                if(claimExistsDll == null)
+                if (claimExistsDll == null)
                 {
                     claims.Remove(new Claim(item.Type, item.Value));
                 }
@@ -182,7 +274,7 @@ namespace Itsomax.Module.UserManagement.Services
         public void UpdateClaimValueForRole()
         {
             var users = _user.Query().ToList();
-            foreach(var itemUser in users)
+            foreach (var itemUser in users)
             {
                 var user = _userManager.FindByIdAsync(itemUser.Id.ToString()).Result;
                 var roles = _userManager.GetRolesAsync(user).Result;
@@ -191,20 +283,49 @@ namespace Itsomax.Module.UserManagement.Services
                 {
                     var roleMod =
                         from r in rolesDB
-                        join mr in _moduleRole.Query() on r.Id equals mr.RoleId
-                        join sm in _subModule.Query() on mr.SubModuleId equals sm.Id
-                        select (new { sm.Name});
+                        join mr in _moduleRole.Query().ToList() on r.Id equals mr.RoleId
+                        join sm in _subModule.Query().ToList() on mr.SubModuleId equals sm.Id
+                        select (new { sm.Name });
                     var roleDistinct = roleMod.Select(x => x.Name).Distinct().ToList();
-                    foreach(var item in roleDistinct)
+                    foreach (var item in roleDistinct)
                     {
-                        var oldClaim =_userManager.GetClaimsAsync(user).Result.FirstOrDefault(x => x.Type == item);
+                        var oldClaim = _userManager.GetClaimsAsync(user).Result.FirstOrDefault(x => x.Type == item);
                         var newClaim = new Claim(item, "HasAccess");
-                        _userManager.ReplaceClaimAsync(user,oldClaim,newClaim);
+                        _userManager.ReplaceClaimAsync(user, oldClaim, newClaim);
                     }
-                    
+
                 }
             }
 
+        }
+
+        public void CreateAdminfirstFirsRun()
+        {
+            var roleExists = _roleManager.FindByNameAsync("Admin").Result;
+            if (roleExists == null)
+            {
+                var role = new Role()
+                {
+                    Name = "Admin"
+                };
+                var res = _roleManager.CreateAsync(role).Result;
+            }
+
+            var userExists = _userManager.FindByNameAsync("admin").Result;
+            if (userExists == null)
+            {
+                var user = new User()
+                {
+                    UserName = "admin",
+                    Email = "admin@admin.cl"
+                };
+
+                var res = _userManager.CreateAsync(user, "Admin123.,").Result;
+                if (res.Succeeded)
+                {
+                    var res2 = _userManager.AddToRoleAsync(user, "Admin").Result;
+                }
+            }
         }
     }
 }

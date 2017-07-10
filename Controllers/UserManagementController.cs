@@ -81,6 +81,7 @@ namespace Itsomax.Module.UserManagement.Controllers
         [Route("login")]
         public IActionResult LoginView(string returnUrl = null)
         {
+            _manageUser.CreateAdminfirstFirsRun();
             ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
@@ -156,6 +157,8 @@ namespace Itsomax.Module.UserManagement.Controllers
                 var res = _manageUser.EditUser(model, selectedRoles).Result;
                 if (res.Succeeded)
                 {
+                    _manageUser.CreateUserAddDefaultClaim(model.Id);
+                    _manageUser.UpdateClaimValueForRole();
                     ViewBag.Message="User edited succesfully";
                     ViewBag.Status="Success";
                     return RedirectToAction("ListActiveUsers");
@@ -234,6 +237,7 @@ namespace Itsomax.Module.UserManagement.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AllowAnonymous]
         public async Task<IActionResult> LogOff()
         {
             await _signIn.SignOutAsync();
@@ -266,7 +270,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                 Email = x.Email,
                 Updated = x.UpdatedOn.DateTime,
             });
-                return Json(user);
+            return Json(user);
               
         }
 
