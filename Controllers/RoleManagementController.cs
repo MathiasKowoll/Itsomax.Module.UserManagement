@@ -19,26 +19,29 @@ namespace Itsomax.Module.UserManagement.Controllers
         private readonly RoleManager<Role> _roleManager;
         private readonly IRepository<ModuleRole> _modRoleRepository;
         private readonly IRepository<SubModule> _subModule;
+        private readonly IRepository<Role> _role;
         private readonly IManageUser _manageUser;
 
 
         public RoleManagementController(RoleManager<Role> roleManager,IRepository<ModuleRole> modRoleRepository,
-                                    IRepository<SubModule> subModule,IManageUser manageUser)
+                                    IRepository<SubModule> subModule,IManageUser manageUser, IRepository<Role> role)
         {
             _roleManager = roleManager;
             _modRoleRepository = modRoleRepository;
             _subModule = subModule;
             _manageUser = manageUser;
+            _role = role;
         }
 
         public IActionResult CreateRole()
         {
-            _subModule.Query().Select(x => new SelectListItem
+            var modulelist = new CreateRoleViewModel();
+            modulelist.ModuleList = _subModule.Query().Select(x => new SelectListItem
             {
                 Value = x.Name,
                 Text = StringHelperClass.CamelSplit(x.Name)
             });
-            return View();
+            return View(modulelist);
         }
 
         [HttpPost]
@@ -62,16 +65,59 @@ namespace Itsomax.Module.UserManagement.Controllers
                     };
                     _modRoleRepository.Add(modrole);
                     _modRoleRepository.SaveChange();
-                    _manageUser.UpdateClaimValueForRole();
                 }
+                _manageUser.UpdateClaimValueForRole();
             }
-            return RedirectToAction("RoleView");
+            return RedirectToAction("ListRoles");
 
+        }
+        [HttpGet]
+        [Route("/get/all/active/roles/json/")]
+        public JsonResult ListRolesView()
+        {
+            var roles = _role.Query().ToList().Select(x => new RoleListViewModel
+            {
+                Id = x.Id,
+                RoleName = x.Name
+            });
+            return Json(roles);
         }
 
         public IActionResult ListRoles()
         {
             return View();
+        }
+
+        [HttpGet("/get/role/{Id}")]
+        public IActionResult EditRoleView(int? Id)
+        {
+            if (Id == null)
+            {
+                return NotFound();
+            }
+
+            var role = _roleManager.FindByIdAsync(Id.Value.ToString()).Result;
+            var subModules = _manageUser.GetRoleModulesToSelectListItem(role.Id);
+            var roleEdit = new EditRoleViewModel
+            {
+                Id = role.Id,
+                RoleName = role.Name,
+                ModuleList = subModules,
+
+            };
+
+            return View(roleEdit);
+        }
+        [HttpPost]
+        public IActionResult EditRolePostView(EditRoleViewModel model,params string[] selectedModules)
+        {
+            if (ModelState.IsValid)
+            {
+                var res = _manageUser.EditRole(model, selectedModules).Result;
+                return RedirectToAction("ListRoles");
+            }
+            
+            return View(model);
         }
 
         [HttpDelete]

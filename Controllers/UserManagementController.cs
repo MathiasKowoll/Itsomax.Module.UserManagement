@@ -81,6 +81,7 @@ namespace Itsomax.Module.UserManagement.Controllers
         [Route("login")]
         public IActionResult LoginView(string returnUrl = null)
         {
+            _manageUser.CreateAdminfirstFirsRun();
             ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
@@ -114,7 +115,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                 }
                 if (res.IsLockedOut)
                 {
-                    return Redirect("/Lockout");
+                    return Redirect("/Admin/Lockout");
                 }
                 else
                 {
@@ -156,6 +157,8 @@ namespace Itsomax.Module.UserManagement.Controllers
                 var res = _manageUser.EditUser(model, selectedRoles).Result;
                 if (res.Succeeded)
                 {
+                    _manageUser.CreateUserAddDefaultClaim(model.Id);
+                    _manageUser.UpdateClaimValueForRole();
                     ViewBag.Message="User edited succesfully";
                     ViewBag.Status="Success";
                     return RedirectToAction("ListActiveUsers");
@@ -234,6 +237,7 @@ namespace Itsomax.Module.UserManagement.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AllowAnonymous]
         public async Task<IActionResult> LogOff()
         {
             await _signIn.SignOutAsync();
@@ -266,7 +270,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                 Email = x.Email,
                 Updated = x.UpdatedOn.DateTime,
             });
-                return Json(user);
+            return Json(user);
               
         }
 
@@ -310,30 +314,65 @@ namespace Itsomax.Module.UserManagement.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult ChangePasswordPostView(ChangePasswordViewModel model)
         {
-            var currentUser = _user.GetUserAsync(_httpContext.HttpContext.User).Result;
+            var currentUser = GetCurrentUserAsync().Result;
             var res = _user.ChangePasswordAsync(currentUser, model.CurrentPassword, model.NewPassword).Result;
             if(res.Succeeded)
+            {
+                return RedirectToAction("/Admin/WelcomePage");
+            }
+            else
+            {
+                return RedirectToAction("/Admin/WelcomePage");
+            }
+
+        }
+        
+        public IActionResult ChangePasswordUserView(long? Id)
+        {
+            if (Id == null)
+                return NotFound();
+
+            var user = _user.FindByIdAsync(Id.ToString()).Result;
+            var userChange = new ChangePasswordUserViewModel
+            {
+                UserId = Id.Value,
+                UserName = user.UserName,
+                NewPassword = "xxxxxxxxx",
+                ConfirmPassword = "xxxxxxxxx"
+            };
+            /*
+            var user = _userRepository.Query().Where(x => x.Id == Id).Select(x => new ChangePasswordUserViewModel
+            {
+                UserId=x.Id,
+                UserName=x.UserName,
+                NewPassword="xxxxxxxxx",
+                ConfirmPassword= "xxxxxxxxx"
+
+            }).ToList();
+            */
+            return View(userChange);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ChangePasswordUserPostView(ChangePasswordUserViewModel model)
+        {
+            if(model.NewPassword == "xxxxxxxxx")
+            {
+                return Json(true);
+            }
+            var user = _user.FindByIdAsync(model.UserId.ToString()).Result;
+            var token = _user.GeneratePasswordResetTokenAsync(user).Result;
+            var res = _user.ResetPasswordAsync(user,token,model.NewPassword).Result;
+            if (res.Succeeded)
             {
                 return Json(true);
             }
             else
-            {
                 return Json(false);
-            }
-
-        }
-
-        public IActionResult ChangePasswordUserView()
-        {
-            return View();
-        }
-
-        [HttpPost]
-        public IActionResult ChangePasswordUserPostView()
-        {
-            return Json(true);
         }
 
         #region Helpers
@@ -345,12 +384,12 @@ namespace Itsomax.Module.UserManagement.Controllers
                 ModelState.AddModelError(string.Empty, error.Description);
             }
         }
-        /* 
+        
         private Task<User> GetCurrentUserAsync()
         {
-            return _userManager.GetUserAsync(HttpContext.User);
+            return _user.GetUserAsync(HttpContext.User);
         }
-         */
+         
         private IActionResult RedirectToLocal(string returnUrl)
         {
             if (Url.IsLocalUrl(returnUrl))

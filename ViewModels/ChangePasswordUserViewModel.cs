@@ -3,11 +3,11 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Itsomax.Module.UserManagement.ViewModels
 {
-    public class ChangePasswordUserView
+    public class ChangePasswordUserViewModel
     {
-        public ChangePasswordUserView()
-        {
-        }
+        public long UserId { get; set; }
+        [Display(Name = "Username")]
+        public string UserName { get; set; }
 		[Required]
 		[DataType(DataType.Password)]
 		public string NewPassword { get; set; }
