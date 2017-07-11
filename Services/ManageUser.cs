@@ -279,6 +279,27 @@ namespace Itsomax.Module.UserManagement.Services
                 var user = _userManager.FindByIdAsync(itemUser.Id.ToString()).Result;
                 var roles = _userManager.GetRolesAsync(user).Result;
                 var rolesDB = _role.Query().Where(x => roles.Contains(x.Name)).ToList();
+                var subModules = _subModule.Query().ToList();
+
+                foreach (var subMod in subModules)
+                {
+                    var oldClaim = _userManager.GetClaimsAsync(user).Result.FirstOrDefault(x => x.Type == subMod.Name);
+                    var newClaim = new Claim(subMod.Name, "NoAccess");
+                    var res =_userManager.ReplaceClaimAsync(user, oldClaim, newClaim).Result;
+                }
+                
+                foreach (var role in rolesDB)
+                {
+                    var subModulesUser = GetSubmodulesByRoleId(role.Id);
+                    foreach (var item in subModulesUser)
+                    {
+                        var oldClaim = _userManager.GetClaimsAsync(user).Result.FirstOrDefault(x => x.Type == item);
+                        var newClaim = new Claim(item, "HasAccess");
+                        var res = _userManager.ReplaceClaimAsync(user, oldClaim, newClaim).Result;
+                    }
+                }
+                //var rolesDB = _role.Query().Where(x => roles.Contains(x.Name)).ToList();
+                /*
                 foreach (var role in roles)
                 {
                     var roleMod =
@@ -295,6 +316,7 @@ namespace Itsomax.Module.UserManagement.Services
                     }
 
                 }
+                */
             }
 
         }

@@ -2,7 +2,7 @@
     <div class="col-xs-12">
         <div class="box">
             <div class="box-header">
-                <h3 class="box-title">List active all users</h3>
+                <h3 class="box-title">List active all roles</h3>
                 <br>
             </div>
             <div class="box-body">
@@ -67,11 +67,11 @@
                                     {
                                         $.confirm({
                                             title: 'Delete user',
-                                            content: 'Are you sure do you want to delete: '+rowData.userName+'?',
+                                            content: 'Are you sure do you want to delete: ' + rowData.roleName+'?',
                                             buttons: {
                                                         confirm: function () {
                                                             $.ajax({
-                                                                url: '/RoleManagement/DeleteRolePostView/'+rowData.id,
+                                                                url: '/RoleManagement/DeleteRoleView/'+rowData.id,
                                                                 type: 'DELETE',
                                                                 success: function (obj) {
                                                                     //alert("Sucess");

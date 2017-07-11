@@ -44,12 +44,18 @@
           <div class="form-group">
             <label class="col-md-3 control-label" asp-for="IsDeleted"></label>
             <div class="col-md-3">
-                <input class="switchery" type="checkbox" asp-for="IsDeleted" class="form-control" />
+                <input class="switchery form-control" type="checkbox" asp-for="IsDeleted" />
             </div>
             <div class="col-md-6">
               <span asp-validation-for="IsDeleted" class="text-danger"></span>
             </div>
           </div>
+            <div class="form-group">
+                <label class="col-md-3 control-label">Change Password</label>
+                <div class="col-md-3">
+                    <a asp-controller="UserManagement" asp-action="ChangePasswordUserView" asp-route-id="@Model.Id"  class="btn btn-default">Password</a>
+                </div>
+            </div>
           <div class="box-header with-border">
             <h3 class="box-title">Assign Roles</h3>
             <br>
