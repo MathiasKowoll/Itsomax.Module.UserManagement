@@ -369,10 +369,10 @@ namespace Itsomax.Module.UserManagement.Controllers
             var res = _user.ResetPasswordAsync(user,token,model.NewPassword).Result;
             if (res.Succeeded)
             {
-                return Json(true);
+                return RedirectToAction(nameof(ListActiveUsers));
             }
             else
-                return Json(false);
+                return View(model);
         }
 
         #region Helpers
