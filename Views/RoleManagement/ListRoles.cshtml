@@ -66,7 +66,7 @@
                                     else
                                     {
                                         $.confirm({
-                                            title: 'Delete user',
+                                            title: 'Delete role',
                                             content: 'Are you sure do you want to delete: ' + rowData.roleName+'?',
                                             buttons: {
                                                         confirm: function () {
@@ -74,11 +74,12 @@
                                                                 url: '/RoleManagement/DeleteRoleView/'+rowData.id,
                                                                 type: 'DELETE',
                                                                 success: function (obj) {
-                                                                    //alert("Sucess");
+                                                                    toastr.success('', 'Role: ' + rowData.roleName + ' deleted succesfully', { positionClass: 'toast-top-center' });
                                                                     table.ajax.reload();
                                                                 },
-                                                                error:function(obj){
-                                                                    //alert('Failed');
+                                                                error: function (obj) {
+                                                                    toastr.error('', 'Role: ' + rowData.roleName + ' could not be deleted', { positionClass: 'toast-top-center' });
+                                                                    table.ajax.reload();
                                                                 }
                                                             });
                                                         },

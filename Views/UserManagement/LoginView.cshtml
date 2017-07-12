@@ -1,4 +1,4 @@
-@model LoginUserViewModel
+﻿@model LoginUserViewModel
 @inject SignInManager<User> SignInManager
 @using Microsoft.AspNetCore.Authentication
 
@@ -24,6 +24,7 @@
 		<link href="~/css/Admin/AdminLTE.min.css" rel="stylesheet">
         <!-- iCheck -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/iCheck/1.0.2/skins/square/blue.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
 
   <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
   <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -42,9 +43,8 @@
     <p class="login-box-msg">Sign in to start your session</p>
 
     <form asp-controller="UserManagement" asp-action="LoginView" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post">
-      <div asp-validation-summary="All" class="text-danger"></div>
       <div class="form-group has-feedback">
-        <input asp-for="UserName" class="form-control" placeholder="Email">
+        <input asp-for="UserName" class="form-control" placeholder="Username">
         <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
         <span asp-validation-for="UserName" class="text-danger"></span>
       </div>
@@ -82,6 +82,9 @@
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 <!-- iCheck -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/iCheck/1.0.2/icheck.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+@await Component.InvokeAsync("NToastNotify.Toastr")
 <script>
   $(function () {
     $('input').iCheck({

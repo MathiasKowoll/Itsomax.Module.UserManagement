@@ -11,6 +11,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using Microsoft.AspNetCore.Http;
+using NToastNotify;
 
 namespace Itsomax.Module.UserManagement.Controllers
 {
@@ -24,9 +25,10 @@ namespace Itsomax.Module.UserManagement.Controllers
         private readonly ICreateMenu _createMenu;
         private readonly IRepository<User> _userRepository;
         private readonly IHttpContextAccessor _httpContext;
+        private IToastNotification _toastNotification;
 
         public UserManagementController(IManageUser manageUser,ICreateMenu createMenu,SignInManager<User> signIn,UserManager<User> user,
-        IRepository<User> userRepository,RoleManager<Role> roleManage,IHttpContextAccessor httpContext)
+        IRepository<User> userRepository,RoleManager<Role> roleManage,IHttpContextAccessor httpContext, IToastNotification toastNotification)
         {
             _manageUser=manageUser;
             _createMenu = createMenu;
@@ -35,6 +37,7 @@ namespace Itsomax.Module.UserManagement.Controllers
             _userRepository = userRepository;
             _roleManage = roleManage;
             _httpContext = httpContext;
+            _toastNotification = toastNotification;
         }
 
         public IActionResult CreateUser()
@@ -57,15 +60,20 @@ namespace Itsomax.Module.UserManagement.Controllers
                 var res = _manageUser.CreateUser(model, selectedRoles).Result;
                 if(res.Succeeded)
                 {
-                    
-                    ViewBag.Message="User create succesfully";
-                    ViewBag.Status="Success";
+                    _toastNotification.AddToastMessage("User: " + model.UserName + " create succesfully", "", ToastEnums.ToastType.Success, new ToastOption()
+                    {
+                        PositionClass = ToastPositions.TopCenter
+                    });
                     return RedirectToAction("ListActiveUsers");
                 }
                 else
                 {
-                    ViewBag.Message="User not created";
-                    ViewBag.Status="Failed";
+                    _toastNotification.AddToastMessage("User: " + model.UserName + " not created", "", ToastEnums.ToastType.Error, new ToastOption()
+                    {
+                        PositionClass = ToastPositions.TopCenter
+                    });
+                    ViewBag.Message="User: "+model.UserName+" not created";
+                    ViewBag.Success = 1;
                     return View(model);
                 }
                 
@@ -98,12 +106,19 @@ namespace Itsomax.Module.UserManagement.Controllers
                 var user = _user.FindByNameAsync(model.UserName).Result;
                 if (user==null)
                 {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                    _toastNotification.AddToastMessage("Invalid user or password, please try again", "", ToastEnums.ToastType.Warning, new ToastOption()
+                    {
+                        PositionClass = ToastPositions.TopCenter
+                    });
                     return View(model);
                 }
                 if (user.IsDeleted)
                 {
-                    return NotFound();
+                    _toastNotification.AddToastMessage("Invalid user or password, please try again", "", ToastEnums.ToastType.Warning, new ToastOption()
+                    {
+                        PositionClass = ToastPositions.TopCenter
+                    });
+                    return View(model);
                 }
                 _manageUser.CreateUserAddDefaultClaim(user.Id);
                 _manageUser.UpdateClaimValueForRole();
@@ -115,11 +130,18 @@ namespace Itsomax.Module.UserManagement.Controllers
                 }
                 if (res.IsLockedOut)
                 {
-                    return Redirect("/Admin/Lockout");
+                    _toastNotification.AddToastMessage("User is locked out, please contact your system administrator", "", ToastEnums.ToastType.Warning, new ToastOption()
+                    {
+                        PositionClass = ToastPositions.TopCenter
+                    });
+                    return View(model);
                 }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                    _toastNotification.AddToastMessage("Invalid user or password, please try again", "", ToastEnums.ToastType.Warning, new ToastOption()
+                    {
+                        PositionClass = ToastPositions.TopCenter
+                    });
                     return View(model);
                 }
             }
@@ -157,17 +179,21 @@ namespace Itsomax.Module.UserManagement.Controllers
                 var res = _manageUser.EditUser(model, selectedRoles).Result;
                 if (res.Succeeded)
                 {
+                    _toastNotification.AddToastMessage("User: " + model.UserName + " modified succesfully", "", ToastEnums.ToastType.Success, new ToastOption()
+                    {
+                        PositionClass = ToastPositions.TopCenter
+                    });
                     _manageUser.CreateUserAddDefaultClaim(model.Id);
                     _manageUser.UpdateClaimValueForRole();
-                    ViewBag.Message="User edited succesfully";
-                    ViewBag.Status="Success";
-                    return RedirectToAction("ListActiveUsers");
+                    return RedirectToAction(nameof(ListActiveUsers));
                 }
                 else
                 {
-                    ViewBag.Message="Failed editing user";
-                    ViewBag.Status="Failed";
-                    return RedirectToAction("ListActiveUsers");
+                    _toastNotification.AddToastMessage("Failed editing user " + model.UserName, "", ToastEnums.ToastType.Error, new ToastOption()
+                    {
+                        PositionClass = ToastPositions.TopCenter
+                    });
+                    return RedirectToAction(nameof(ListActiveUsers));
                 }
                     
             }
@@ -186,23 +212,49 @@ namespace Itsomax.Module.UserManagement.Controllers
             else
             {
                 var user = _user.FindByIdAsync(Id.Value.ToString()).Result;
-                var currentUser = _user.GetUserAsync(_httpContext.HttpContext.User).Result;
+                var currentUser = GetCurrentUserAsync().Result;
 
                 if (user != currentUser)
                 {
                     try
-					{
-                        user.IsDeleted = true;
-                        var res =_user.UpdateAsync(user).Result;
-						//_userRepository.SaveChange();
-						return Json(true);
-					}
+                    {
+                        if(user.IsDeleted == true)
+                        {
+                            user.IsDeleted = false;
+                            var res = _user.UpdateAsync(user).Result;
+                            if (res.Succeeded)
+                            {
+                                return Json(true);
 
-				    catch (Exception ex)
-					{
-						var Message = ex.Message;
-						return Json(false);
-					}
+                            }
+                            else
+                            {
+                                return Json(false);
+                            }
+
+                        }
+                        else
+                        {
+                            user.IsDeleted = true;
+                            var res = _user.UpdateAsync(user).Result;
+                            if (res.Succeeded)
+                            {
+                                return Json(true);
+
+                            }
+                            else
+                            {
+                                return Json(false);
+                            }
+                        }
+                        
+                    }
+
+                    catch (Exception ex)
+                    {
+                        var Message = ex.Message;
+                        return Json(false);
+                    }
                 }
                 else
                 {
@@ -223,6 +275,10 @@ namespace Itsomax.Module.UserManagement.Controllers
             else
             {
                 var user = _user.FindByIdAsync(Id.ToString()).Result;
+                if(user.IsDeleted == false)
+                {
+                    return Json(false);
+                }
                 var res = _user.DeleteAsync(user).Result;
                 if(res.Succeeded)
                 {
@@ -246,9 +302,11 @@ namespace Itsomax.Module.UserManagement.Controllers
 
         public IActionResult ListActiveUsers()
         {
+            var user = GetCurrentUserAsync().Result;
+            ViewBag.UserId = user.Id;
             return View();
         }
-
+        /*
         public IActionResult ListDeletedUsers()
         {
             return View();
@@ -258,22 +316,23 @@ namespace Itsomax.Module.UserManagement.Controllers
         {
             return View();
         }
-
+        */
         [HttpGet]
         [Route("/get/all/active/users/json/")]
         public JsonResult ListActiveUsersJsonView()
         {
-            var user = _user.Users.ToList().Where(x => x.IsDeleted == false).Select(x => new UserListViewModel
+            var user = _user.Users.ToList().Select(x => new UserListViewModel
             {
                 Id = x.Id,
                 UserName = x.UserName,
                 Email = x.Email,
+                IsDeleted = x.IsDeleted,
                 Updated = x.UpdatedOn.DateTime,
             });
             return Json(user);
               
         }
-
+        /*
         [HttpGet]
         [Route("/get/all/deleted/users/json/")]
         public JsonResult ListDeletedUsersJsonView()
@@ -290,7 +349,7 @@ namespace Itsomax.Module.UserManagement.Controllers
             return Json(user);
 
         }
-
+        
         [HttpGet]
         [Route("/get/all/users/json/")]
         public JsonResult ListAllUsersJsonView()
@@ -307,7 +366,7 @@ namespace Itsomax.Module.UserManagement.Controllers
             return Json(user);
 
         }
-
+        */
         public IActionResult ChangePasswordView()
         {
             return View();
@@ -321,11 +380,19 @@ namespace Itsomax.Module.UserManagement.Controllers
             var res = _user.ChangePasswordAsync(currentUser, model.CurrentPassword, model.NewPassword).Result;
             if(res.Succeeded)
             {
-                return RedirectToAction("/Admin/WelcomePage");
+                _toastNotification.AddToastMessage("Your password has been changed succesfully", "",ToastEnums.ToastType.Success,new ToastOption()
+                {
+                    PositionClass=ToastPositions.TopCenter
+                });
+                return RedirectPermanent("/Admin/WelcomePage");
             }
             else
             {
-                return RedirectToAction("/Admin/WelcomePage");
+                _toastNotification.AddToastMessage("There was a problem changing your password", "", ToastEnums.ToastType.Error,new ToastOption()
+                {
+                    PositionClass = ToastPositions.TopCenter
+                });
+                return RedirectPermanent("/Admin/WelcomePage");
             }
 
         }
@@ -343,16 +410,6 @@ namespace Itsomax.Module.UserManagement.Controllers
                 NewPassword = "xxxxxxxxx",
                 ConfirmPassword = "xxxxxxxxx"
             };
-            /*
-            var user = _userRepository.Query().Where(x => x.Id == Id).Select(x => new ChangePasswordUserViewModel
-            {
-                UserId=x.Id,
-                UserName=x.UserName,
-                NewPassword="xxxxxxxxx",
-                ConfirmPassword= "xxxxxxxxx"
-
-            }).ToList();
-            */
             return View(userChange);
         }
 
@@ -362,6 +419,8 @@ namespace Itsomax.Module.UserManagement.Controllers
         {
             if(model.NewPassword == "xxxxxxxxx")
             {
+                ViewBag.Message = "Password not modified";
+                ViewBag.Success = 1;
                 return Json(true);
             }
             var user = _user.FindByIdAsync(model.UserId.ToString()).Result;
@@ -369,10 +428,21 @@ namespace Itsomax.Module.UserManagement.Controllers
             var res = _user.ResetPasswordAsync(user,token,model.NewPassword).Result;
             if (res.Succeeded)
             {
+                _toastNotification.AddToastMessage("Password for user " + user.UserName + " changed succesfully", "", ToastEnums.ToastType.Success, new ToastOption()
+                {
+                    PositionClass = ToastPositions.TopCenter
+                });
                 return RedirectToAction(nameof(ListActiveUsers));
             }
             else
+            {
+                _toastNotification.AddToastMessage("Could not change password, please try again", "", ToastEnums.ToastType.Error, new ToastOption()
+                {
+                    PositionClass = ToastPositions.TopCenter
+                });
                 return View(model);
+            }
+                
         }
 
         #region Helpers

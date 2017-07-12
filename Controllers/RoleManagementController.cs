@@ -10,6 +10,7 @@ using Itsomax.Data.Infrastructure.Data;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Itsomax.Module.Core.Extensions.CommonHelpers;
+using NToastNotify;
 
 namespace Itsomax.Module.UserManagement.Controllers
 {
@@ -21,16 +22,19 @@ namespace Itsomax.Module.UserManagement.Controllers
         private readonly IRepository<SubModule> _subModule;
         private readonly IRepository<Role> _role;
         private readonly IManageUser _manageUser;
+        private IToastNotification _toastNotification;
 
 
         public RoleManagementController(RoleManager<Role> roleManager,IRepository<ModuleRole> modRoleRepository,
-                                    IRepository<SubModule> subModule,IManageUser manageUser, IRepository<Role> role)
+                                    IRepository<SubModule> subModule,IManageUser manageUser, IRepository<Role> role,
+                                    IToastNotification toastNotification)
         {
             _roleManager = roleManager;
             _modRoleRepository = modRoleRepository;
             _subModule = subModule;
             _manageUser = manageUser;
             _role = role;
+            _toastNotification = toastNotification;
         }
 
         public IActionResult CreateRole()
@@ -45,6 +49,7 @@ namespace Itsomax.Module.UserManagement.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult CreateRolePostView(CreateRoleViewModel model, params string[] selectedModules)
         {
             Role role = new Role
@@ -67,8 +72,21 @@ namespace Itsomax.Module.UserManagement.Controllers
                     _modRoleRepository.SaveChange();
                 }
                 _manageUser.UpdateClaimValueForRole();
+                _toastNotification.AddToastMessage("Role: " + model.RoleName + " created succesfully", "", ToastEnums.ToastType.Success, new ToastOption()
+                {
+                    PositionClass = ToastPositions.TopCenter
+                });
+                return RedirectToAction("ListRoles");
             }
-            return RedirectToAction("ListRoles");
+            else
+            {
+                _toastNotification.AddToastMessage("Could not create role: " + model.RoleName, "", ToastEnums.ToastType.Error, new ToastOption()
+                {
+                    PositionClass = ToastPositions.TopCenter
+                });
+                return View(model);
+            }
+            
 
         }
         [HttpGet]
@@ -109,18 +127,45 @@ namespace Itsomax.Module.UserManagement.Controllers
             return View(roleEdit);
         }
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult EditRolePostView(EditRoleViewModel model,params string[] selectedModules)
         {
             if (ModelState.IsValid)
             {
                 var res = _manageUser.EditRole(model, selectedModules).Result;
-                return RedirectToAction("ListRoles");
+                if (res.Succeeded)
+                {
+                    _manageUser.UpdateClaimValueForRole();
+                    _toastNotification.AddToastMessage("Role: " + model.RoleName + " edited succesfully", "", ToastEnums.ToastType.Success, new ToastOption()
+                    {
+                        PositionClass = ToastPositions.TopCenter
+                    });
+                    return RedirectToAction("ListRoles");
+                }
+                else
+                {
+                    _toastNotification.AddToastMessage("Could not edit role: " + model.RoleName, "", ToastEnums.ToastType.Error, new ToastOption()
+                    {
+                        PositionClass = ToastPositions.TopCenter
+                    });
+                    return View(model);
+                }
+
+               
+            }
+            else
+            {
+                _toastNotification.AddToastMessage("Could not edit role: " + model.RoleName, "", ToastEnums.ToastType.Error, new ToastOption()
+                {
+                    PositionClass = ToastPositions.TopCenter
+                });
+                return View(model);
             }
             
-            return View(model);
         }
 
         [HttpDelete]
+        [ValidateAntiForgeryToken]
         public IActionResult DeleteRoleView(int? Id)
         {
             if(Id == null)
@@ -132,10 +177,13 @@ namespace Itsomax.Module.UserManagement.Controllers
                 var role =_roleManager.FindByIdAsync(Id.Value.ToString()).Result;
                 var res = _roleManager.DeleteAsync(role).Result;
                 if (res.Succeeded)
+                {
                     return Json(true);
+                }
                 else
+                {
                     return Json(false);
-                
+                }
             }
         }
         

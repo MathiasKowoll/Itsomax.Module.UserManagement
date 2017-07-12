@@ -339,7 +339,8 @@ namespace Itsomax.Module.UserManagement.Services
                 var user = new User()
                 {
                     UserName = "admin",
-                    Email = "admin@admin.cl"
+                    Email = "admin@admin.cl",
+                    LockoutEnabled= false
                 };
 
                 var res = _userManager.CreateAsync(user, "Admin123.,").Result;
