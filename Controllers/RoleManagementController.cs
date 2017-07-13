@@ -165,7 +165,6 @@ namespace Itsomax.Module.UserManagement.Controllers
         }
 
         [HttpDelete]
-        [ValidateAntiForgeryToken]
         public IActionResult DeleteRoleView(int? Id)
         {
             if(Id == null)
