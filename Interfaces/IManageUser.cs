@@ -16,6 +16,7 @@ namespace Itsomax.Module.UserManagement.Interfaces
         IEnumerable<SelectListItem> GetUserRolesToSelectListItem(int UserId);
         IEnumerable<SelectListItem> GetRoleModulesToSelectListItem(long RoleId);
         IList<string> GetSubmodulesByRoleId(long Id);
+        void AddDefaultClaimAllUsers();
         bool CreateUserAddDefaultClaim(long Id);
         void UpdateClaimValueForRole();
         void CreateAdminfirstFirsRun();

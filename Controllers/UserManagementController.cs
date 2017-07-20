@@ -120,7 +120,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                     });
                     return View(model);
                 }
-                _manageUser.CreateUserAddDefaultClaim(user.Id);
+                _manageUser.AddDefaultClaimAllUsers();
                 _manageUser.UpdateClaimValueForRole();
                 var res = await _signIn.PasswordSignInAsync(user,model.Password,model.RememberMe,true);
                 if (res.Succeeded)

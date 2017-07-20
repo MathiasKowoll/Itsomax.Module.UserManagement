@@ -234,6 +234,15 @@ namespace Itsomax.Module.UserManagement.Services
             return (subModRole.ToList());
         }
 
+        public void AddDefaultClaimAllUsers()
+        {
+            var users = _user.Query().ToList();
+            foreach (var item in users)
+            {
+                CreateUserAddDefaultClaim(item.Id);
+            }
+        }
+
         public bool CreateUserAddDefaultClaim(long Id)
         {
             var user = _userManager.FindByIdAsync(Id.ToString()).Result;
@@ -251,7 +260,7 @@ namespace Itsomax.Module.UserManagement.Services
             foreach (var item in claimsList)
             {
                 var claimExistDBType = claimExistDB.FirstOrDefault(x => x.Type == item.Name);
-                if (claimExistDB.Count == 0)
+                if (claimExistDBType == null)
                 {
                     claims.Add(new Claim(item.Name, "NoAccess"));
                 }
@@ -298,25 +307,6 @@ namespace Itsomax.Module.UserManagement.Services
                         var res = _userManager.ReplaceClaimAsync(user, oldClaim, newClaim).Result;
                     }
                 }
-                //var rolesDB = _role.Query().Where(x => roles.Contains(x.Name)).ToList();
-                /*
-                foreach (var role in roles)
-                {
-                    var roleMod =
-                        from r in rolesDB
-                        join mr in _moduleRole.Query().ToList() on r.Id equals mr.RoleId
-                        join sm in _subModule.Query().ToList() on mr.SubModuleId equals sm.Id
-                        select (new { sm.Name });
-                    var roleDistinct = roleMod.Select(x => x.Name).Distinct().ToList();
-                    foreach (var item in roleDistinct)
-                    {
-                        var oldClaim = _userManager.GetClaimsAsync(user).Result.FirstOrDefault(x => x.Type == item);
-                        var newClaim = new Claim(item, "HasAccess");
-                        _userManager.ReplaceClaimAsync(user, oldClaim, newClaim);
-                    }
-
-                }
-                */
             }
 
         }
