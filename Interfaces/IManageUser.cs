@@ -9,9 +9,6 @@ namespace Itsomax.Module.UserManagement.Interfaces
 {
     public interface IManageUser
     {
-        Task<SucceededTask> CreateUser(CreateUserViewModel model,params string[] selectedRoles);
-        Task<SucceededTask> DeleteUser(long Id);
-        Task<SucceededTask> EditUser(EditUserViewModel model, params string[] rolesAdd);
         Task<SucceededTask> EditRole(EditRoleViewModel model, params string[] subModulesAdd);
         IEnumerable<SelectListItem> GetUserRolesToSelectListItem(int UserId);
         IEnumerable<SelectListItem> GetRoleModulesToSelectListItem(long RoleId);
@@ -19,6 +16,5 @@ namespace Itsomax.Module.UserManagement.Interfaces
         void AddDefaultClaimAllUsers();
         bool CreateUserAddDefaultClaim(long Id);
         void UpdateClaimValueForRole();
-        void CreateAdminfirstFirsRun();
     }
 }

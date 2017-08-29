@@ -11,6 +11,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Itsomax.Module.Core.Extensions.CommonHelpers;
 using NToastNotify;
+using System;
 
 namespace Itsomax.Module.UserManagement.Controllers
 {
@@ -40,12 +41,26 @@ namespace Itsomax.Module.UserManagement.Controllers
         public IActionResult CreateRole()
         {
             var modulelist = new CreateRoleViewModel();
-            modulelist.ModuleList = _subModule.Query().Select(x => new SelectListItem
+            try
             {
-                Value = x.Name,
-                Text = StringHelperClass.CamelSplit(x.Name)
-            });
-            return View(modulelist);
+                
+                modulelist.ModuleList = _subModule.Query().Select(x => new SelectListItem
+                {
+                    Value = x.Name,
+                    Text = StringHelperClass.CamelSplit(x.Name)
+                });
+                return View(modulelist);
+            }
+            catch(Exception ex)
+            {
+                _toastNotification.AddToastMessage("Error ocurrerd: "+ex, "", ToastEnums.ToastType.Success, new ToastOption()
+                {
+                    PositionClass = ToastPositions.TopCenter
+                });
+                return RedirectToAction("ListRoles");
+            }
+            
+            
         }
 
         [HttpPost]
@@ -60,45 +75,68 @@ namespace Itsomax.Module.UserManagement.Controllers
             var res =_roleManager.CreateAsync(role).Result;
             if (res.Succeeded)
             {
-                foreach (var item  in selectedModules)
+                try
                 {
-                    var mod = _subModule.Query().FirstOrDefault(x => x.Name.Contains(item));
-                    ModuleRole modrole = new ModuleRole
+                    foreach (var item in selectedModules)
                     {
-                        RoleId = role.Id,
-                        SubModuleId = mod.Id
-                    };
-                    _modRoleRepository.Add(modrole);
-                    _modRoleRepository.SaveChange();
+                        var mod = _subModule.Query().FirstOrDefault(x => x.Name.Contains(item));
+                        ModuleRole modrole = new ModuleRole
+                        {
+                            RoleId = role.Id,
+                            SubModuleId = mod.Id
+                        };
+                        _modRoleRepository.Add(modrole);
+                        _modRoleRepository.SaveChange();
+                    }
+                    _manageUser.UpdateClaimValueForRole();
+                    _toastNotification.AddToastMessage("Role: " + model.RoleName + " created succesfully", "", ToastEnums.ToastType.Success, new ToastOption()
+                    {
+                        PositionClass = ToastPositions.TopCenter
+                    });
+                    return RedirectToAction("ListRoles");
                 }
-                _manageUser.UpdateClaimValueForRole();
-                _toastNotification.AddToastMessage("Role: " + model.RoleName + " created succesfully", "", ToastEnums.ToastType.Success, new ToastOption()
+                catch(Exception ex)
                 {
-                    PositionClass = ToastPositions.TopCenter
-                });
-                return RedirectToAction("ListRoles");
+                    _toastNotification.AddToastMessage("Could not create role: " + model.RoleName+" error: "+ex, "", ToastEnums.ToastType.Error, new ToastOption()
+                    {
+                        PositionClass = ToastPositions.TopCenter
+                    });
+                    return View(model);
+                }
+                
             }
             else
             {
-                _toastNotification.AddToastMessage("Could not create role: " + model.RoleName, "", ToastEnums.ToastType.Error, new ToastOption()
+                _toastNotification.AddToastMessage("Could not create role: " + model.RoleName, "Error: "+res.Errors, ToastEnums.ToastType.Error, new ToastOption()
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
                 return View(model);
             }
-            
-
         }
         [HttpGet]
         [Route("/get/all/active/roles/json/")]
         public JsonResult ListRolesView()
         {
-            var roles = _role.Query().ToList().Select(x => new RoleListViewModel
+
+            try
             {
-                Id = x.Id,
-                RoleName = x.Name
-            });
-            return Json(roles);
+                var roles = _role.Query().ToList().Select(x => new RoleListViewModel
+                {
+                    Id = x.Id,
+                    RoleName = x.Name
+                });
+                return Json(roles);
+            }
+            catch(Exception ex)
+            {
+                _toastNotification.AddToastMessage("An error ocurred", "Error: " + ex, ToastEnums.ToastType.Error, new ToastOption()
+                {
+                    PositionClass = ToastPositions.TopCenter
+                });
+                return Json(false);
+            }
+            
         }
 
         public IActionResult ListRoles()

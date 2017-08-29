@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using System.Xml.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace Itsomax.Module.UserManagement.Services
 {
@@ -24,10 +25,11 @@ namespace Itsomax.Module.UserManagement.Services
         private readonly IRepository<Role> _role;
         private readonly IRepository<SubModule> _subModule;
         private readonly IRepository<ModuleRole> _moduleRole;
+        private readonly ILogger _logger;
 
         public ManageUser(UserManager<User> userManager, RoleManager<Role> roleManager, SignInManager<User> signIn,
                          IRepository<Role> role, IRepository<User> user, IRepository<SubModule> subModule,
-                         IRepository<ModuleRole> moduleRole)
+                         IRepository<ModuleRole> moduleRole,ILogger<ManageUser> logger)
         {
             _roleManager = roleManager;
             _userManager = userManager;
@@ -36,110 +38,10 @@ namespace Itsomax.Module.UserManagement.Services
             _role = role;
             _subModule = subModule;
             _moduleRole = moduleRole;
+            _logger = logger;
 
         }
 
-        public async Task<SucceededTask> CreateUser(CreateUserViewModel model, params string[] selectedRoles)
-        {
-            var user = new User()
-            {
-                Email = model.Email,
-                UserName = model.UserName
-            };
-            var resUser = _userManager.CreateAsync(user, model.Password).Result;
-            //var dummy =resUser.AsyncState.ToString();
-            if (resUser.Succeeded)
-            {
-                //await _userManager.SetLockoutEnabledAsync(user, true);
-                var resRole = _userManager.AddToRolesAsync(user, selectedRoles).Result;
-                if (resRole.Succeeded)
-                {
-                    var resClaim = CreateUserAddDefaultClaim(user.Id);
-                    if (resClaim)
-                    {
-                        UpdateClaimValueForRole();
-                    }
-                    return SucceededTask.Success;
-                }
-                else
-                {
-                    await DeleteUser(user.Id);
-                    //TODO:add text based on database and languaje
-                    return SucceededTask.Failed("ErrorUserCreate");
-                }
-            }
-            else
-            {
-                return SucceededTask.Failed("ErrorUserCreate");
-            }
-
-        }
-        public async Task<SucceededTask> DeleteUser(long Id)
-        {
-            var user = await _userManager.FindByIdAsync(Id.ToString());
-            var resDelUSer = await _userManager.DeleteAsync(user);
-            if (resDelUSer.Succeeded)
-            {
-                return SucceededTask.Success;
-            }
-            else
-            {
-                return SucceededTask.Failed("ErrorUserDelete");
-            }
-        }
-        public async Task<SucceededTask> EditUser(EditUserViewModel model, params string[] rolesAdd)
-        {
-            var user = _userManager.FindByIdAsync(model.Id.ToString()).Result;
-
-            user.Email = model.Email;
-            user.UserName = model.UserName;
-            user.IsDeleted = model.IsDeleted;
-
-
-            var res = await _userManager.UpdateAsync(user);
-            if (res.Succeeded)
-            {
-                var rolesRemove = _userManager.GetRolesAsync(user).Result;
-                var resDel = await _userManager.RemoveFromRolesAsync(user, rolesRemove);
-                if (resDel.Succeeded)
-                {
-                    var resAdd = await _userManager.AddToRolesAsync(user, rolesAdd);
-                    if (resAdd.Succeeded)
-                    {
-                        if(model.IsLocked==true)
-                        {
-                            var resL = _userManager.SetLockoutEndDateAsync(user, Convert.ToDateTime("3000-01-01")).Result;
-                            if (resL.Succeeded)
-                            {
-                                return SucceededTask.Success;
-                            }
-                            else
-                                return SucceededTask.Failed("ErrorUserEdit");
-                        }
-                        else
-                        {
-                            var resL = _userManager.SetLockoutEndDateAsync(user, Convert.ToDateTime("1970-01-01")).Result;
-                            if (resL.Succeeded)
-                            {
-                                return SucceededTask.Success;
-                            }
-                            else
-                                return SucceededTask.Failed("ErrorUserEdit");
-                        }
-                        
-                    }
-                    else
-                        return SucceededTask.Failed("ErrorUserEdit");
-                }
-                else
-                    return SucceededTask.Failed("ErrorUserEditr");
-
-            }
-            else
-            {
-                return SucceededTask.Failed("ErrorUserEdit");
-            }
-        }
 
         public async Task<SucceededTask> EditRole(EditRoleViewModel model, params string [] subModulesAdd)
         {
@@ -163,11 +65,6 @@ namespace Itsomax.Module.UserManagement.Services
             foreach (var item in modRole)
             {
                 var modrole = _moduleRole.Query().FirstOrDefault(x => x.RoleId == item.RoleId && x.SubModuleId == item.SubModuleId);
-                //ModuleRole modrole = new ModuleRole
-                //{
-                //    RoleId = item.RoleId,
-                //    SubModuleId = item.SubModuleId
-                //};
                 _moduleRole.Remove(modrole);
             }
             _moduleRole.SaveChange();
@@ -205,26 +102,41 @@ namespace Itsomax.Module.UserManagement.Services
         
         public IEnumerable<SelectListItem> GetRoleModulesToSelectListItem(long RoleId)
         {
-            var role = _roleManager.FindByIdAsync(RoleId.ToString()).Result;
-            var subModuleRole = GetSubmodulesByRoleId(role.Id);
-            var subModule = _subModule.Query().ToList().Select(x=> new SelectListItem
+            try
             {
-                Selected = subModuleRole.Contains(x.Name),
-                Text = x.Name,
-                Value = x.Name
-            });
+                var role = _roleManager.FindByIdAsync(RoleId.ToString()).Result;
+                var subModuleRole = GetSubmodulesByRoleId(role.Id);
+                var subModule = _subModule.Query().ToList().Select(x => new SelectListItem
+                {
+                    Selected = subModuleRole.Contains(x.Name),
+                    Text = x.Name,
+                    Value = x.Name
+                });
+                return (subModule);
+            }
+            catch(Exception ex)
+            {
+                var submodule = new List<SelectListItem>();
+                submodule.Add(new SelectListItem() {Text = "", Value = "" });
+                //_logger.LogError(LoggingEvents);
+                return (submodule);
+            }
+            
 
-            return (subModule);
+            
         }
         
 
-        //public IList<string> GetSubmodules()
-        //{
-        //    return(_subModule.Query().Select(x => x.Name)).ToList();
-        //}
-
         public IList<string> GetSubmodulesByRoleId(long Id)
         {
+            try
+            {
+
+            }
+            catch
+            {
+
+            }
             var subModRole =
                 from mr in _moduleRole.Query().ToList()
                 join sb in _subModule.Query().ToList() on mr.SubModuleId equals sb.Id
@@ -309,36 +221,6 @@ namespace Itsomax.Module.UserManagement.Services
                 }
             }
 
-        }
-
-        public void CreateAdminfirstFirsRun()
-        {
-            var roleExists = _roleManager.FindByNameAsync("Admin").Result;
-            if (roleExists == null)
-            {
-                var role = new Role()
-                {
-                    Name = "Admin"
-                };
-                var res = _roleManager.CreateAsync(role).Result;
-            }
-
-            var userExists = _userManager.FindByNameAsync("admin").Result;
-            if (userExists == null)
-            {
-                var user = new User()
-                {
-                    UserName = "admin",
-                    Email = "admin@admin.cl",
-                    LockoutEnabled= false
-                };
-
-                var res = _userManager.CreateAsync(user, "Admin123.,").Result;
-                if (res.Succeeded)
-                {
-                    var res2 = _userManager.AddToRoleAsync(user, "Admin").Result;
-                }
-            }
         }
     }
 }
