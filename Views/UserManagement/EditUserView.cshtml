@@ -1,104 +1,113 @@
+@using Itsomax.Module.UserManagement.ViewModels
 @model EditUserViewModel
-<br>
-<div class="row">
-  <div class="col-md-10 col-md-offset-1">
-    <div class="box box-primary">
-      <div class="box-header with-border">
-        <h3 class="box-title">Edit User</h3>
-        <br>
-      </div>
-      <form class="form-horizontal" asp-controller="UserManagement" asp-action="EditUserPostView" method="Post">
-        <div class="box-body">
-          <div class="form-group">
-              <div class="col-md-3">
-                <input asp-for="Id" type="hidden" class="form-control" />
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="col-md-3 control-label" asp-for="UserName"></label>
-            <div class="col-md-3">
-                <input asp-for="UserName" class="form-control" />
-            </div>
-            <div class="col-md-6">
-              <span asp-validation-for="UserName" class="text-danger"></span>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="col-md-3 control-label" asp-for="Email"></label>
-            <div class="col-md-3">
-                <input asp-for="Email" class="form-control" />
-            </div>
-            <div class="col-md-6">
-              <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="col-md-3 control-label" asp-for="IsLocked"></label>
-            <div class="col-md-3">
-                <input class="switchery form-control" type="checkbox" asp-for="IsLocked" />
-            </div>
-            <div class="col-md-6">
-              <span asp-validation-for="IsLocked" class="text-danger"></span>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="col-md-3 control-label" asp-for="IsDeleted"></label>
-            <div class="col-md-3">
-                <input class="switchery form-control" type="checkbox" asp-for="IsDeleted" />
-            </div>
-            <div class="col-md-6">
-              <span asp-validation-for="IsDeleted" class="text-danger"></span>
-            </div>
-          </div>
-            <div class="form-group">
-                <label class="col-md-3 control-label">Change Password</label>
-                <div class="col-md-3">
-                    <a asp-controller="UserManagement" asp-action="ChangePasswordUserView" asp-route-id="@Model.Id"  class="btn btn-default">Password</a>
+
+<div class="container-fluid">
+    <br />
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card card-outline-info">
+                <div class="card-header">
+                    <h4 class="m-b-0 text-white">Create User</h4>
+                </div>
+                <div class="card-body">
+                    <form class="form-horizontal p-t-20 justify-content-center" asp-controller="UserManagement" asp-action="EditUserPostView" method="Post">
+                        <div class="form-body">
+                            <h3 class="box-title">User Details</h3>
+                            <hr class="m-t-0 m-b-40">
+                            <div class="form-group row align-items-center">
+                                <div class="col-md-3">
+                                    <input asp-for="Id" type="hidden" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="form-group row align-items-center">
+                                <label for="username2" class="col-sm-2 text-right control-label " asp-for="UserName"></label>
+                                <div class="col-sm-4">
+                                    <div class="input-group">
+                                        <div class="input-group-addon"><i class="ti-user"></i></div>
+                                        <input asp-for="UserName" class="form-control" id="username2" placeholder="Username" />
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <span asp-validation-for="UserName" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row align-items-center">
+                                <label for="email" class="col-sm-2 text-right control-label " asp-for="Email"></label>
+                                <div class="col-sm-4">
+                                    <div class="input-group">
+                                        <div class="input-group-addon"><i class="ti-email"></i></div>
+                                        <input asp-for="Email" class="form-control" id="email" placeholder="Email" />
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <span asp-validation-for="Email" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-2 text-right control-label ">Is Locked</label>
+                                <div class="col-sm-4">
+                                    <div class="checkbox checkbox-info">
+                                        <input id="locked" asp-for="IsLocked" type="checkbox" />
+                                        <label for="locked"></label>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <span asp-validation-for="IsLocked" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-2 text-right control-label ">Is Disabled</label>
+                                <div class="col-sm-4">
+                                    <div class="checkbox checkbox-info">
+                                        <input asp-for="IsDeleted" type="checkbox" id="deleted" />
+                                        <label for="deleted"></label>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <span asp-validation-for="IsDeleted" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <br />
+                            <h3 class="box-title">Change Password</h3>
+                            <hr class="m-t-0 m-b-40">
+                            <div class="form-group row align-items-center">
+                                <label class="col-sm-2 text-right control-label ">Change Password</label>
+                                <div class="col-sm-4">
+                                    <a asp-controller="UserManagement" asp-action="ChangePasswordUserView" asp-route-id="@Model.Id" class="btn btn-info waves-effect waves-light"><i class="fa fa-lock"></i> Change Password</a>
+                                </div>
+                            </div>
+                            <br />
+                            <h3 class="box-title">Assign Roles</h3>
+                            <hr class="m-t-0 m-b-40">
+                            <div class="form-group row align-items-center">
+                                <div class="col-md-10 ml-md-auto">
+                                    @foreach (var item in Model.RolesList)
+                                    {
+                                        <div class="checkbox checkbox-info">
+                                            <input id="@item.Value" type="checkbox" name="rolesAdd" value="@item.Value" checked="@item.Selected">
+                                            <label for="@item.Value">@item.Value</label>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                            <h3 class="box-title">Save edited user</h3>
+                            <hr class="m-t-0 m-b-40">
+                            <div class="form-group row">
+                                <div class="col-md-10 ml-md-auto">
+                                    <a asp-controller="UserManagement" asp-action="ListActiveUsers" class="btn btn-info waves-effect waves-light">Cancel</a>
+                                    <button type="submit" class="btn btn-info waves-effect waves-light"><i class="fa fa-check"></i> Save</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
-          <div class="box-header with-border">
-            <h3 class="box-title">Assign Roles</h3>
-            <br>
-          </div>
-           <div class="form-group">
-             <div class="col-md-offset-3"></div>
-             @foreach (var item in Model.RolesList)
-             {
-                <label class="col-md-2 control-label">@item.Value</label>
-                <div class="col-md-1 checkbox checkbox-switchery switchery-sm checkbox-right">
-                  <label>
-                      <input class="switchery" type="checkbox" name="SelectedRoles" value="@item.Value" checked="@item.Selected" />
-                  </label>
-                </div>
-              }
-          </div>
-          <div class="form-group">
-            <div class="col-md-offset-5 col-md-4">
-                <a asp-controller="UserManagement" asp-action="ListActiveUsers" class="btn btn-default">Cancel</a>
-                <button type="submit" class="btn btn-default">Save</button>
-            </div>
         </div>
-        </div>
-      </form>
     </div>
-  </div>
 </div>
 
 
 @section scripts{
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
-  <script>
-    if (Array.prototype.forEach) {
-      var elems = Array.prototype.slice.call(document.querySelectorAll('.switchery'));
-      elems.forEach(function(html) {
-      var switchery = new Switchery(html);
-      });
-    }
-    else {
-      var elems = document.querySelectorAll('.switchery');
-      for (var i = 0; i < elems.length; i++) {
-        var switchery = new Switchery(elems[i]);
-      }
-    }
-  </script>
+
 }

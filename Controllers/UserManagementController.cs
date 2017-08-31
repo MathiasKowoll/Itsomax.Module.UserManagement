@@ -24,13 +24,14 @@ namespace Itsomax.Module.UserManagement.Controllers
         private readonly RoleManager<Role> _roleManager;
         private readonly ICreateMenu _createMenu;
         private readonly IRepository<User> _userRepository;
+        private readonly IRepository<AppSetting> _appSettings;
         private readonly IHttpContextAccessor _httpContext;
         private IToastNotification _toastNotification;
         private readonly ILogginToDatabase _logger;
 
         public UserManagementController(IManageUser manageUser,ICreateMenu createMenu,SignInManager<User> signIn,UserManager<User> user,
         IRepository<User> userRepository,RoleManager<Role> roleManage,IHttpContextAccessor httpContext, IToastNotification toastNotification,
-        ILogginToDatabase logger)
+        ILogginToDatabase logger, IRepository<AppSetting> appSettings)
         {
             _manageUser=manageUser;
             _createMenu = createMenu;
@@ -41,6 +42,7 @@ namespace Itsomax.Module.UserManagement.Controllers
             _httpContext = httpContext;
             _toastNotification = toastNotification;
             _logger = logger;
+            _appSettings = appSettings;
         }
 
         public IActionResult CreateUser()
@@ -146,7 +148,10 @@ namespace Itsomax.Module.UserManagement.Controllers
                 var res = await _signIn.PasswordSignInAsync(user,model.Password,model.RememberMe,true);
                 if (res.Succeeded)
                 {
-                    _createMenu.CreteMenuFile();
+                    if(_appSettings.Query().Any(x => x.Key== "NewModuleCreateMenu" && x.Value=="true"))
+                    {
+                        _createMenu.CreteMenuFile();
+                    }
                     _logger.InformationLog("User: "+user.UserName+" succesful login","Login",res.ToString(),user.UserName);
                     return RedirectToLocal(returnUrl);
                 }
@@ -479,7 +484,7 @@ namespace Itsomax.Module.UserManagement.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult ChangePasswordUserPostView(ChangePasswordUserViewModel model)
+        public async Task<IActionResult> ChangePasswordUserPostView(ChangePasswordUserViewModel model)
         {
             if(model.NewPassword == "xxxxxxxxx")
             {
@@ -489,9 +494,9 @@ namespace Itsomax.Module.UserManagement.Controllers
                 });
                 return Json(true);
             }
-            var user = _userManager.FindByIdAsync(model.UserId.ToString()).Result;
-            var token = _userManager.GeneratePasswordResetTokenAsync(user).Result;
-            var res = _userManager.ResetPasswordAsync(user,token,model.NewPassword).Result;
+            var user = await _userManager.FindByIdAsync(model.UserId.ToString());
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var res =  await _userManager.ResetPasswordAsync(user,token,model.NewPassword);
             if (res.Succeeded)
             {
                 _toastNotification.AddToastMessage("Password for user " + user.UserName + " changed succesfully", "", ToastEnums.ToastType.Success, new ToastOption()
@@ -502,11 +507,21 @@ namespace Itsomax.Module.UserManagement.Controllers
             }
             else
             {
-                _toastNotification.AddToastMessage("Could not change password, please try again", "Error: "+res.Errors, ToastEnums.ToastType.Error, new ToastOption()
+                var errorList = "";
+                foreach(var error in res.Errors)
+                {
+                    errorList = errorList + " " + error.Description;
+                }
+
+                /*
+                _toastNotification.AddToastMessage("Could not change password, please try again", " ", ToastEnums.ToastType.Error, new ToastOption()
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
-                return View(model);
+                */
+                AddErrors(res);
+                ModelState.AddModelError(nameof(ChangePasswordViewModel.NewPassword),errorList);
+                return View("ChangePasswordUserView", model);
             }
                 
         }

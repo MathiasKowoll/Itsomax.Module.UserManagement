@@ -1,11 +1,11 @@
-<div class="row">
+<div class="container-fluid">
     <div class="col-xs-12">
-        <div class="box">
-            <div class="box-header">
-                <h3 class="box-title">List active all users</h3>
-                <br>
+        <br />
+        <div class="card card-outline-info">
+            <div class="card-header">
+                <h4 class="m-b-0 text-white">All active users</h4>
             </div>
-            <div class="box-body">
+            <div class="card-body">
                 <div id='events'></div>
                 <table id="users" class="table table-bordered table-hover">
                     <thead>
@@ -17,23 +17,13 @@
                             <th>Updated</th>
                         </tr>
                     </thead>
-                    <!--
-                    <tfoot>
-                        <tr>
-                            <th>Id</th>
-                            <th>UserName</th>
-                            <th>Email</th>
-                            <th>Updated</th>
-                        </tr>
-                    </tfoot>
-                    -->
                 </table>
             </div>
         </div>
     </div>
 </div>
 
-@section scripts{
+ @section scripts{
     <script src="https://cdn.datatables.net/select/1.2.2/js/dataTables.select.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/1.3.1/js/dataTables.buttons.min.js"></script>
     <script>
@@ -81,7 +71,7 @@
                             }
                             if (@ViewBag.UserId == rowData.id)
                             {
-                                        toastr.error('Enable/Disable user', 'You cannot disable yourself', { positionClass: 'toast-top-center' });
+                                        toastr.error('', 'You cannot disable yourself', { positionClass: 'toast-top-center' });
                                         table.ajax.reload;
                             }
                             else
