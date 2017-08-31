@@ -13,6 +13,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using System.Xml.Linq;
 using Microsoft.Extensions.Logging;
+using Itsomax.Module.Core.Interfaces;
 
 namespace Itsomax.Module.UserManagement.Services
 {
@@ -25,11 +26,11 @@ namespace Itsomax.Module.UserManagement.Services
         private readonly IRepository<Role> _role;
         private readonly IRepository<SubModule> _subModule;
         private readonly IRepository<ModuleRole> _moduleRole;
-        private readonly ILogger _logger;
+        private readonly ILogginToDatabase _logger;
 
         public ManageUser(UserManager<User> userManager, RoleManager<Role> roleManager, SignInManager<User> signIn,
                          IRepository<Role> role, IRepository<User> user, IRepository<SubModule> subModule,
-                         IRepository<ModuleRole> moduleRole,ILogger<ManageUser> logger)
+                         IRepository<ModuleRole> moduleRole, ILogginToDatabase logger)
         {
             _roleManager = roleManager;
             _userManager = userManager;
@@ -89,23 +90,48 @@ namespace Itsomax.Module.UserManagement.Services
         public IEnumerable<SelectListItem> GetUserRolesToSelectListItem(int UserId)
         {
             var user = _userManager.FindByIdAsync(UserId.ToString()).Result;
-            var userRoles = _userManager.GetRolesAsync(user).Result;
-            var roles = _roleManager.Roles.ToList().Select(x => new SelectListItem()
+            if (user == null)
             {
-                Selected = userRoles.Contains(x.Name),
-                Text = x.Name,
-                Value = x.Name
-            });
+                return null;
+            }
+            var userRoles = _userManager.GetRolesAsync(user).Result;
+            if (userRoles == null)
+            {
+                return null;
+            }
+            try
+            {
+                var roles = _roleManager.Roles.ToList().Select(x => new SelectListItem()
+                {
+                    Selected = userRoles.Contains(x.Name),
+                    Text = x.Name,
+                    Value = x.Name
+                });
 
-            return roles;
+                return roles;
+            }
+            catch (Exception ex)
+            {
+                _logger.ErrorLog(ex.Message, "GetUserRolesToSelectListItem", ex.InnerException.ToString());
+                return null;
+            }
         }
+            
         
         public IEnumerable<SelectListItem> GetRoleModulesToSelectListItem(long RoleId)
         {
             try
             {
                 var role = _roleManager.FindByIdAsync(RoleId.ToString()).Result;
+                if(role == null)
+                {
+                    return null;
+                }
                 var subModuleRole = GetSubmodulesByRoleId(role.Id);
+                if(subModuleRole == null)
+                {
+                    return null;
+                }
                 var subModule = _subModule.Query().ToList().Select(x => new SelectListItem
                 {
                     Selected = subModuleRole.Contains(x.Name),
@@ -116,10 +142,8 @@ namespace Itsomax.Module.UserManagement.Services
             }
             catch(Exception ex)
             {
-                var submodule = new List<SelectListItem>();
-                submodule.Add(new SelectListItem() {Text = "", Value = "" });
-                //_logger.LogError(LoggingEvents);
-                return (submodule);
+                _logger.ErrorLog(ex.Message, "GetRoleModulesToSelectListItem", ex.InnerException.ToString());
+                return null;
             }
             
 
@@ -131,19 +155,22 @@ namespace Itsomax.Module.UserManagement.Services
         {
             try
             {
-
-            }
-            catch
-            {
-
-            }
-            var subModRole =
+                var subModRole =
                 from mr in _moduleRole.Query().ToList()
                 join sb in _subModule.Query().ToList() on mr.SubModuleId equals sb.Id
                 where mr.RoleId == Id
                 select (sb.Name);
 
-            return (subModRole.ToList());
+                return (subModRole.ToList());
+            }
+            catch(Exception ex)
+            {
+                _logger.ErrorLog(ex.Message, "GetSubmodulesByRoleId", ex.InnerException.ToString());
+                var subModule = new List<string> ();
+                return null;
+            }
+
+            
         }
 
         public void AddDefaultClaimAllUsers()
