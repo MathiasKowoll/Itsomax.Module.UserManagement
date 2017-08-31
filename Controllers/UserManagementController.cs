@@ -527,7 +527,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
-                _logger.InformationLog("Own password change succesfully", "Own password change", AddErrorList(res), GetCurrentUserAsync().Result.UserName);
+                _logger.InformationLog("Own password change succesfully", "Own password not change", AddErrorList(res), GetCurrentUserAsync().Result.UserName);
                 ModelState.AddModelError(nameof(ChangePasswordViewModel.NewPassword), AddErrorList(res));
                 return View(nameof(ChangePasswordView),model);
             }
