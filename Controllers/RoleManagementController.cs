@@ -19,16 +19,18 @@ namespace Itsomax.Module.UserManagement.Controllers
     public class RoleManagementController : Controller
     {
         private readonly RoleManager<Role> _roleManager;
+        private readonly UserManager<User> _userManager;
         private readonly IRepository<ModuleRole> _modRoleRepository;
         private readonly IRepository<SubModule> _subModule;
         private readonly IRepository<Role> _role;
         private readonly IManageUser _manageUser;
         private IToastNotification _toastNotification;
+        private readonly ILogginToDatabase _logger;
 
 
         public RoleManagementController(RoleManager<Role> roleManager,IRepository<ModuleRole> modRoleRepository,
                                     IRepository<SubModule> subModule,IManageUser manageUser, IRepository<Role> role,
-                                    IToastNotification toastNotification)
+                                    IToastNotification toastNotification, ILogginToDatabase logger, UserManager<User> userManager)
         {
             _roleManager = roleManager;
             _modRoleRepository = modRoleRepository;
@@ -36,6 +38,8 @@ namespace Itsomax.Module.UserManagement.Controllers
             _manageUser = manageUser;
             _role = role;
             _toastNotification = toastNotification;
+            _logger = logger;
+            _userManager = userManager;
         }
 
         public IActionResult CreateRole()
@@ -57,6 +61,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
+                _logger.ErrorLog(ex.Message, "Create Role", ex.InnerException.ToString(), GetCurrentUserAsync().Result.UserName);
                 return RedirectToAction("ListRoles");
             }
             
@@ -93,24 +98,27 @@ namespace Itsomax.Module.UserManagement.Controllers
                     {
                         PositionClass = ToastPositions.TopCenter
                     });
+                    _logger.InformationLog("Role" + role.Name + " created succesfully", "Create Role", string.Empty, GetCurrentUserAsync().Result.UserName);
                     return RedirectToAction("ListRoles");
                 }
                 catch(Exception ex)
                 {
-                    _toastNotification.AddToastMessage("Could not create role: " + model.RoleName+" error: "+ex, "", ToastEnums.ToastType.Error, new ToastOption()
+                    _toastNotification.AddToastMessage("Could not create role: " + model.RoleName, "", ToastEnums.ToastType.Error, new ToastOption()
                     {
                         PositionClass = ToastPositions.TopCenter
                     });
+                    _logger.InformationLog(ex.Message, "Create Role", ex.InnerException.ToString(), GetCurrentUserAsync().Result.UserName);
                     return View(model);
                 }
                 
             }
             else
             {
-                _toastNotification.AddToastMessage("Could not create role: " + model.RoleName, "Error: "+res.Errors, ToastEnums.ToastType.Error, new ToastOption()
+                _toastNotification.AddToastMessage("Could not create role: " + model.RoleName, "", ToastEnums.ToastType.Error, new ToastOption()
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
+                _logger.InformationLog("Could not create role: " + model.RoleName, "Create Role", string.Empty, GetCurrentUserAsync().Result.UserName);
                 return View(model);
             }
         }
@@ -130,10 +138,11 @@ namespace Itsomax.Module.UserManagement.Controllers
             }
             catch(Exception ex)
             {
-                _toastNotification.AddToastMessage("An error ocurred", "Error: " + ex, ToastEnums.ToastType.Error, new ToastOption()
+                _toastNotification.AddToastMessage("An error ocurred", "", ToastEnums.ToastType.Error, new ToastOption()
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
+                _logger.InformationLog(ex.Message, "ListRolesView", ex.InnerException.ToString(), GetCurrentUserAsync().Result.UserName);
                 return Json(false);
             }
             
@@ -178,6 +187,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                     {
                         PositionClass = ToastPositions.TopCenter
                     });
+                    _logger.InformationLog("Role " + model.RoleName + " edited succesfully", "Edit Role", string.Empty, GetCurrentUserAsync().Result.UserName);
                     return RedirectToAction("ListRoles");
                 }
                 else
@@ -186,7 +196,8 @@ namespace Itsomax.Module.UserManagement.Controllers
                     {
                         PositionClass = ToastPositions.TopCenter
                     });
-                    return View(model);
+                    _logger.InformationLog("Role " + model.RoleName + " not edited succesfully", "Edit Role", string.Empty, GetCurrentUserAsync().Result.UserName);
+                    return View(nameof(EditRoleView),model);
                 }
 
                
@@ -197,6 +208,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
+                _logger.InformationLog("Role " + model.RoleName + " not edited succesfully", "Edit Role", string.Empty, GetCurrentUserAsync().Result.UserName);
                 return View(model);
             }
             
@@ -215,14 +227,55 @@ namespace Itsomax.Module.UserManagement.Controllers
                 var res = _roleManager.DeleteAsync(role).Result;
                 if (res.Succeeded)
                 {
+                    _logger.InformationLog("Role " + role.Name + " deleted succesfully", "Delete Role", string.Empty, GetCurrentUserAsync().Result.UserName);
                     return Json(true);
                 }
                 else
                 {
+                    _logger.InformationLog("Role " + role.Name + " not deleted succesfully", "Delete Role", AddErrorList(res), GetCurrentUserAsync().Result.UserName);
                     return Json(false);
                 }
             }
         }
-        
+
+        #region Helpers
+
+        private void AddErrors(IdentityResult result)
+        {
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+        }
+
+        private string AddErrorList(IdentityResult result)
+        {
+            var errorList = string.Empty;
+            foreach (var error in result.Errors)
+            {
+                errorList = errorList + " " + error.Description;
+            }
+            return errorList;
+        }
+
+        private Task<User> GetCurrentUserAsync()
+        {
+            return _userManager.GetUserAsync(HttpContext.User);
+        }
+
+        private IActionResult RedirectToLocal(string returnUrl)
+        {
+            if (Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+            else
+            {
+                return Redirect("/");
+            }
+        }
+
+        #endregion
+
     }
 }
