@@ -10,9 +10,6 @@ using System.Linq;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using System.Xml.Linq;
-using Microsoft.Extensions.Logging;
 using Itsomax.Module.Core.Interfaces;
 
 namespace Itsomax.Module.UserManagement.Services

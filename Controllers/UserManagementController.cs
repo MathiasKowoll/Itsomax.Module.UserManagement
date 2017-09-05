@@ -26,7 +26,7 @@ namespace Itsomax.Module.UserManagement.Controllers
         private readonly IRepository<User> _userRepository;
         private readonly IRepository<AppSetting> _appSettings;
         private readonly IHttpContextAccessor _httpContext;
-        private IToastNotification _toastNotification;
+        private readonly IToastNotification _toastNotification;
         private readonly ILogginToDatabase _logger;
 
         public UserManagementController(IManageUser manageUser,ICreateMenu createMenu,SignInManager<User> signIn,UserManager<User> user,
@@ -125,58 +125,52 @@ namespace Itsomax.Module.UserManagement.Controllers
         public async Task<IActionResult> LoginView(LoginUserViewModel model ,string returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid) return View(model);
+            var user = await _userManager.FindByNameAsync(model.UserName);
+            if (user==null)
             {
-                var user = await _userManager.FindByNameAsync(model.UserName);
-                if (user==null)
+                _toastNotification.AddToastMessage("Invalid user or password, please try again", "", ToastEnums.ToastType.Warning, new ToastOption()
                 {
-                    _toastNotification.AddToastMessage("Invalid user or password, please try again", "", ToastEnums.ToastType.Warning, new ToastOption()
-                    {
-                        PositionClass = ToastPositions.TopCenter
-                    });
-                    _logger.InformationLog("User does not exists or tried to enter null value for user.","Login",string.Empty,model.UserName);
-                    return View(model);
-                }
-                if (user.IsDeleted)
-                {
-                    _toastNotification.AddToastMessage("Invalid user or password, please try again", "", ToastEnums.ToastType.Warning, new ToastOption()
-                    {
-                        PositionClass = ToastPositions.TopCenter
-                    });
-                    _logger.InformationLog("User: "+user.UserName+" has been deleted","Login");
-                    return View(model);
-                }
-                _manageUser.AddDefaultClaimAllUsers();
-                _manageUser.UpdateClaimValueForRole();
-                var res = await _signIn.PasswordSignInAsync(user,model.Password,model.RememberMe,true);
-                if (res.Succeeded)
-                {
-                    if(_appSettings.Query().Any(x => x.Key== "NewModuleCreateMenu" && x.Value=="true"))
-                    {
-                        _createMenu.CreteMenuFile();
-                    }
-                    _logger.InformationLog("User: "+user.UserName+" succesful login","Login",res.ToString(),user.UserName);
-                    return RedirectToLocal(returnUrl);
-                }
-                if (res.IsLockedOut)
-                {
-                    _toastNotification.AddToastMessage("User is locked out, please contact your system administrator", "", ToastEnums.ToastType.Warning, new ToastOption()
-                    {
-                        PositionClass = ToastPositions.TopCenter
-                    });
-                    _logger.InformationLog("User " + user.UserName + " lockout", "Login",string.Empty,user.UserName);
-                    return View(model);
-                }
-                else
-                {
-                    _toastNotification.AddToastMessage("Invalid user or password, please try again", "", ToastEnums.ToastType.Warning, new ToastOption()
-                    {
-                        PositionClass = ToastPositions.TopCenter
-                    });
-                    _logger.InformationLog("User " + user.UserName + " does not exists or tried to enter null value for user.", "Login", string.Empty, model.UserName);
-                    return View(model);
-                }
+                    PositionClass = ToastPositions.TopCenter
+                });
+                _logger.InformationLog("User does not exists or tried to enter null value for user.","Login",string.Empty,model.UserName);
+                return View(model);
             }
+            if (user.IsDeleted)
+            {
+                _toastNotification.AddToastMessage("Invalid user or password, please try again", "", ToastEnums.ToastType.Warning, new ToastOption()
+                {
+                    PositionClass = ToastPositions.TopCenter
+                });
+                _logger.InformationLog("User: "+user.UserName+" has been deleted","Login");
+                return View(model);
+            }
+            _manageUser.AddDefaultClaimAllUsers();
+            _manageUser.UpdateClaimValueForRole();
+            var res = await _signIn.PasswordSignInAsync(user,model.Password,model.RememberMe,true);
+            if (res.Succeeded)
+            {
+                if(_appSettings.Query().Any(x => x.Key== "NewModuleCreateMenu" && x.Value=="true"))
+                {
+                    _createMenu.CreteMenuFile();
+                }
+                _logger.InformationLog("User: "+user.UserName+" succesful login","Login",res.ToString(),user.UserName);
+                return RedirectToLocal(returnUrl);
+            }
+            if (res.IsLockedOut)
+            {
+                _toastNotification.AddToastMessage("User is locked out, please contact your system administrator", "", ToastEnums.ToastType.Warning, new ToastOption()
+                {
+                    PositionClass = ToastPositions.TopCenter
+                });
+                _logger.InformationLog("User " + user.UserName + " lockout", "Login",string.Empty,user.UserName);
+                return View(model);
+            }
+            _toastNotification.AddToastMessage("Invalid user or password, please try again", "", ToastEnums.ToastType.Warning, new ToastOption()
+            {
+                PositionClass = ToastPositions.TopCenter
+            });
+            _logger.InformationLog("User " + user.UserName + " does not exists or tried to enter null value for user.", "Login", string.Empty, model.UserName);
             return View(model);
         }
         [HttpGet("/get/user/{Id}")]
@@ -193,7 +187,7 @@ namespace Itsomax.Module.UserManagement.Controllers
             }
             var locked = await _userManager.IsLockedOutAsync(user);
             var roles = _manageUser.GetUserRolesToSelectListItem(Id.Value);
-            var EditUser = new EditUserViewModel
+            var editUser = new EditUserViewModel
             {
                 Id = user.Id,
                 Email = user.Email,
@@ -202,7 +196,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                 IsLocked = locked,
                 IsDeleted = user.IsDeleted
             };
-            return View(EditUser);
+            return View(editUser);
         }
 
         [HttpPost]
@@ -245,7 +239,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                         var resAdd = await _userManager.AddToRolesAsync(user, rolesAdd);
                         if (resAdd.Succeeded)
                         {
-                            if (model.IsLocked == true)
+                            if (model.IsLocked)
                             {
                                 var resL = await _userManager.SetLockoutEndDateAsync(user, Convert.ToDateTime("3000-01-01"));
                                 if(resL.Succeeded)

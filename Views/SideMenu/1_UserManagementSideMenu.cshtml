@@ -1,0 +1,28 @@
+﻿@if ((User.HasClaim(c => c.Value.ToString() == "HasAccess" && (c.Type.Contains("User") || c.Type.Contains("Role"))) || User.IsInRole("Admin")))
+{
+    <li class="nav-small-cap">USER MANAGEMENT</li>
+}
+@if ((User.HasClaim(c => c.Value.ToString() == "HasAccess" && (c.Type.Contains("RoleManagement"))) || User.IsInRole("Admin")))
+{
+    <li>
+        <a href="#" class="has-arrow waves-effect waves-dark" aria-expanded="false">
+            <i class="mdi mdi-gauge"></i> <span class="hide-menu">Role Management</span>
+        </a>
+        <ul aria-expanded="false" class="collapse">
+            <li><a href="/RoleManagement/ListRoles">List Roles</a></li>
+            <li><a href="/RoleManagement/CreateRole">Create Role</a></li>
+        </ul>
+    </li>
+}
+@if ((User.HasClaim(c => c.Value.ToString() == "HasAccess" && (c.Type.Contains("UserManagement"))) || User.IsInRole("Admin")))
+{
+    <li>
+        <a href="#" class="has-arrow waves-effect waves-dark" aria-expanded="false">
+            <i class="mdi mdi-gauge"></i> <span class="hide-menu">User Management</span>
+        </a>
+        <ul aria-expanded="false" class="collapse">
+            <li><a href="/UserManagement/ListActiveUsers">List Active Users</a></li>
+            <li><a href="/UserManagement/CreateUser">Create User</a></li>
+        </ul>
+    </li>
+}
