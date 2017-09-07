@@ -109,7 +109,7 @@ namespace Itsomax.Module.UserManagement.Services
             }
             catch (Exception ex)
             {
-                _logger.ErrorLog(ex.Message, "GetUserRolesToSelectListItem", ex.InnerException.ToString());
+                _logger.ErrorLog(ex.Message, "GetUserRolesToSelectListItem", ex.InnerException.Message);
                 return null;
             }
         }
@@ -139,7 +139,7 @@ namespace Itsomax.Module.UserManagement.Services
             }
             catch(Exception ex)
             {
-                _logger.ErrorLog(ex.Message, "GetRoleModulesToSelectListItem", ex.InnerException.ToString());
+                _logger.ErrorLog(ex.Message, "GetRoleModulesToSelectListItem", ex.InnerException.Message);
                 return null;
             }
             
@@ -162,7 +162,7 @@ namespace Itsomax.Module.UserManagement.Services
             }
             catch(Exception ex)
             {
-                _logger.ErrorLog(ex.Message, "GetSubmodulesByRoleId", ex.InnerException.ToString());
+                _logger.ErrorLog(ex.Message, "GetSubmodulesByRoleId", ex.InnerException.Message);
                 var subModule = new List<string> ();
                 return null;
             }

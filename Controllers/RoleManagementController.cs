@@ -61,7 +61,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
-                _logger.ErrorLog(ex.Message, "Create Role", ex.InnerException.ToString(), GetCurrentUserAsync().Result.UserName);
+                _logger.ErrorLog(ex.Message, "Create Role", ex.InnerException.Message, GetCurrentUserAsync().Result.UserName);
                 return RedirectToAction("ListRoles");
             }
             
@@ -107,7 +107,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                     {
                         PositionClass = ToastPositions.TopCenter
                     });
-                    _logger.InformationLog(ex.Message, "Create Role", ex.InnerException.ToString(), GetCurrentUserAsync().Result.UserName);
+                    _logger.InformationLog(ex.Message, "Create Role", ex.InnerException.Message, GetCurrentUserAsync().Result.UserName);
                     return View(model);
                 }
                 
@@ -142,7 +142,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
-                _logger.InformationLog(ex.Message, "ListRolesView", ex.InnerException.ToString(), GetCurrentUserAsync().Result.UserName);
+                _logger.InformationLog(ex.Message, "ListRolesView", ex.InnerException.Message, GetCurrentUserAsync().Result.UserName);
                 return Json(false);
             }
             

@@ -393,7 +393,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                     catch (Exception ex)
                     {
                         var Message = ex.Message;
-                        _logger.ErrorLog(ex.Message, "Disable User", ex.InnerException.ToString(), GetCurrentUserAsync().Result.UserName);
+                        _logger.ErrorLog(ex.Message, "Disable User", ex.InnerException.Message, GetCurrentUserAsync().Result.UserName);
                         return Json(false);
                     }
                 }
@@ -444,7 +444,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                 }
                 catch(Exception ex)
                 {
-                    _logger.ErrorLog(ex.Message, "Delete User", ex.InnerException.ToString(), GetCurrentUserAsync().Result.UserName);
+                    _logger.ErrorLog(ex.Message, "Delete User", ex.InnerException.Message, GetCurrentUserAsync().Result.UserName);
                     return Json(false);
                 }
                 
@@ -488,7 +488,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
-                _logger.ErrorLog(ex.Message, "Active user list", ex.InnerException.ToString(), GetCurrentUserAsync().Result.UserName);
+                _logger.ErrorLog(ex.Message, "Active user list", ex.InnerException.Message, GetCurrentUserAsync().Result.UserName);
                 return Json(false);
             }
             
