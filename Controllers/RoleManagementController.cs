@@ -215,7 +215,7 @@ namespace Itsomax.Module.UserManagement.Controllers
         }
 
         [HttpDelete]
-        public IActionResult DeleteRoleView(int? Id)
+        public async Task<IActionResult> DeleteRoleView(int? Id)
         {
             if(Id == null)
             {
@@ -223,8 +223,8 @@ namespace Itsomax.Module.UserManagement.Controllers
             }
             else
             {
-                var role =_roleManager.FindByIdAsync(Id.Value.ToString()).Result;
-                var res = _roleManager.DeleteAsync(role).Result;
+                var role = await _roleManager.FindByIdAsync(Id.Value.ToString());
+                var res = await _roleManager.DeleteAsync(role);
                 if (res.Succeeded)
                 {
                     _logger.InformationLog("Role " + role.Name + " deleted succesfully", "Delete Role", string.Empty, GetCurrentUserAsync().Result.UserName);
