@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Itsomax.Module.Core\Itsomax.Module.Core.csproj" />
-    <ProjectReference Include="..\..\Libraries\Itsomax.Data.Infrastructure\Itsomax.Data.Infrastructure.csproj" />
+    <PackageReference Include="Itsomax.Data.Infrastructure" Version="1.0.0" />
+    <PackageReference Include="Itsomax.Module.Core" Version="1.0.0" />
   </ItemGroup>
 </Project>

@@ -77,49 +77,56 @@ namespace Itsomax.Module.UserManagement.Controllers
                 Name = model.RoleName
             };
 
-            var res =_roleManager.CreateAsync(role).Result;
-            if (res.Succeeded)
+            if(ModelState.IsValid)
             {
-                try
+                var res = _roleManager.CreateAsync(role).Result;
+                if (res.Succeeded)
                 {
-                    foreach (var item in selectedModules)
+                    try
                     {
-                        var mod = _subModule.Query().FirstOrDefault(x => x.Name.Contains(item));
-                        ModuleRole modrole = new ModuleRole
+                        foreach (var item in selectedModules)
                         {
-                            RoleId = role.Id,
-                            SubModuleId = mod.Id
-                        };
-                        _modRoleRepository.Add(modrole);
-                        _modRoleRepository.SaveChange();
+                            var mod = _subModule.Query().FirstOrDefault(x => x.Name.Contains(item));
+                            ModuleRole modrole = new ModuleRole
+                            {
+                                RoleId = role.Id,
+                                SubModuleId = mod.Id
+                            };
+                            _modRoleRepository.Add(modrole);
+                            _modRoleRepository.SaveChange();
+                        }
+                        _manageUser.UpdateClaimValueForRole();
+                        _toastNotification.AddToastMessage("Role: " + model.RoleName + " created succesfully", "", ToastEnums.ToastType.Success, new ToastOption()
+                        {
+                            PositionClass = ToastPositions.TopCenter
+                        });
+                        _logger.InformationLog("Role" + role.Name + " created succesfully", "Create Role", string.Empty, GetCurrentUserAsync().Result.UserName);
+                        return RedirectToAction("ListRoles");
                     }
-                    _manageUser.UpdateClaimValueForRole();
-                    _toastNotification.AddToastMessage("Role: " + model.RoleName + " created succesfully", "", ToastEnums.ToastType.Success, new ToastOption()
+                    catch (Exception ex)
                     {
-                        PositionClass = ToastPositions.TopCenter
-                    });
-                    _logger.InformationLog("Role" + role.Name + " created succesfully", "Create Role", string.Empty, GetCurrentUserAsync().Result.UserName);
-                    return RedirectToAction("ListRoles");
+                        _toastNotification.AddToastMessage("Could not create role: " + model.RoleName, "", ToastEnums.ToastType.Error, new ToastOption()
+                        {
+                            PositionClass = ToastPositions.TopCenter
+                        });
+                        _logger.InformationLog(ex.Message, "Create Role", ex.InnerException.Message, GetCurrentUserAsync().Result.UserName);
+                        return View(nameof(CreateRole), model);
+                    }
+
                 }
-                catch(Exception ex)
+                else
                 {
                     _toastNotification.AddToastMessage("Could not create role: " + model.RoleName, "", ToastEnums.ToastType.Error, new ToastOption()
                     {
                         PositionClass = ToastPositions.TopCenter
                     });
-                    _logger.InformationLog(ex.Message, "Create Role", ex.InnerException.Message, GetCurrentUserAsync().Result.UserName);
-                    return View(model);
+                    _logger.InformationLog("Could not create role: " + model.RoleName, "Create Role", string.Empty, GetCurrentUserAsync().Result.UserName);
+                    return View(nameof(CreateRole), model);
                 }
-                
             }
             else
             {
-                _toastNotification.AddToastMessage("Could not create role: " + model.RoleName, "", ToastEnums.ToastType.Error, new ToastOption()
-                {
-                    PositionClass = ToastPositions.TopCenter
-                });
-                _logger.InformationLog("Could not create role: " + model.RoleName, "Create Role", string.Empty, GetCurrentUserAsync().Result.UserName);
-                return View(model);
+                return View(nameof(CreateRole), model);
             }
         }
         [HttpGet]
