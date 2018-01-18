@@ -5,11 +5,12 @@
     <PreserveCompilationContext>false</PreserveCompilationContext>
     <EnableDefaultContentItems>false</EnableDefaultContentItems>
     <OutputType>Library</OutputType>
+    <Description>Module to manage users, roles and permitions over modules</Description>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Update="Microsoft.NETCore.App" Version="2.0.5" />
-    <PackageReference Include="Itsomax.Module.Core" Version="1.0.3" />
+    <PackageReference Include="Itsomax.Module.Core" Version="1.0.6" />
     <PackageReference Include="Itsomax.Data.Infrastructure" Version="1.0.4" />
   </ItemGroup>
 </Project>
