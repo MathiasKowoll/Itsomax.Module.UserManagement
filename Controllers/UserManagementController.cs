@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Itsomax.Module.UserManagement.Interfaces;
-using Itsomax.Module.UserManagement.ViewModels;
+using Itsomax.Module.UserCore.Interfaces;
+using Itsomax.Module.UserCore.ViewModels;
 using Itsomax.Module.Core.Interfaces;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -47,12 +47,14 @@ namespace Itsomax.Module.UserManagement.Controllers
 
         public IActionResult CreateUser()
         {
-            var userModel = new CreateUserViewModel();
-            userModel.RolesList = _roleManager.Roles.ToList().Select(x => new SelectListItem()
+            var userModel = new CreateUserViewModel
             {
-                Value = x.Name,
-                Text = x.Name
-            });
+                RolesList = _roleManager.Roles.ToList().Select(x => new SelectListItem()
+                {
+                    Value = x.Name,
+                    Text = x.Name
+                })
+            };
             return View(userModel);
         }
 

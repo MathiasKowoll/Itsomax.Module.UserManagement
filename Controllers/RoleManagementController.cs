@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Itsomax.Module.UserManagement.Interfaces;
-using Itsomax.Module.UserManagement.ViewModels;
+using Itsomax.Module.UserCore.Interfaces;
+using Itsomax.Module.UserCore.ViewModels;
 using Itsomax.Module.Core.Interfaces;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
