@@ -71,6 +71,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                 };
 
                 var resCreateUser = await _userManager.CreateAsync(user, model.Password);
+                
                 if (resCreateUser.Succeeded)
                 {
                     var resAddRole = await _userManager.AddToRolesAsync(user, selectedRoles);
