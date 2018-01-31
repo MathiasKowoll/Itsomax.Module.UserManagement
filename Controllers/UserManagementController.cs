@@ -10,7 +10,6 @@ using Itsomax.Data.Infrastructure.Data;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
-using Microsoft.AspNetCore.Http;
 using NToastNotify;
 
 namespace Itsomax.Module.UserManagement.Controllers
@@ -23,23 +22,19 @@ namespace Itsomax.Module.UserManagement.Controllers
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<Role> _roleManager;
         private readonly ICreateMenu _createMenu;
-        private readonly IRepository<User> _userRepository;
         private readonly IRepository<AppSetting> _appSettings;
-        private readonly IHttpContextAccessor _httpContext;
         private readonly IToastNotification _toastNotification;
         private readonly ILogginToDatabase _logger;
 
         public UserManagementController(IManageUser manageUser,ICreateMenu createMenu,SignInManager<User> signIn,UserManager<User> user,
-        IRepository<User> userRepository,RoleManager<Role> roleManage,IHttpContextAccessor httpContext, IToastNotification toastNotification,
+        RoleManager<Role> roleManage, IToastNotification toastNotification,
         ILogginToDatabase logger, IRepository<AppSetting> appSettings)
         {
             _manageUser=manageUser;
             _createMenu = createMenu;
             _signIn = signIn;
             _userManager = user;
-            _userRepository = userRepository;
             _roleManager = roleManage;
-            _httpContext = httpContext;
             _toastNotification = toastNotification;
             _logger = logger;
             _appSettings = appSettings;
@@ -97,7 +92,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                         {
                             PositionClass = ToastPositions.TopCenter
                         });
-                        return View(model);
+                        return View(nameof(CreateUser),model);
                     }
                 }
                 _logger.InformationLog("Error while creating user " + model.UserName, "Create user", AddErrorList(resCreateUser), GetCurrentUserAsync().Result.UserName);
@@ -105,10 +100,10 @@ namespace Itsomax.Module.UserManagement.Controllers
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
-                return View(model);
+                return View(nameof(CreateUser),model);
             }
             else
-                return View(model);
+                return View(nameof(CreateUser),model);
 
         }
 
@@ -177,19 +172,19 @@ namespace Itsomax.Module.UserManagement.Controllers
             return View(model);
         }
         [HttpGet("/get/user/{Id}")]
-        public async Task<IActionResult> EditUserView(int? Id)
+        public async Task<IActionResult> EditUserView(int? id)
         {
-            if (Id == null)
+            if (id == null)
             {
                 return NotFound();
             }
-            var user = await _userManager.FindByIdAsync(Id.ToString());
+            var user = await _userManager.FindByIdAsync(id.ToString());
             if(user == null)
             {
                 return NotFound();
             }
             var locked = await _userManager.IsLockedOutAsync(user);
-            var roles = _manageUser.GetUserRolesToSelectListItem(Id.Value);
+            var roles = _manageUser.GetUserRolesToSelectListItem(id.Value);
             var editUser = new EditUserViewModel
             {
                 Id = user.Id,
@@ -336,15 +331,15 @@ namespace Itsomax.Module.UserManagement.Controllers
         }
 
         [HttpDelete]
-        public async Task<IActionResult> DeleteUserPostView(long? Id)
+        public async Task<IActionResult> DeleteUserPostView(long? id)
         {
-            if(Id == null)
+            if(id == null)
             {
                 return Json(false);
             }
             else
             {
-                var user = await _userManager.FindByIdAsync(Id.Value.ToString());
+                var user = await _userManager.FindByIdAsync(id.Value.ToString());
 
                 if(user == null)
                 {
@@ -395,7 +390,7 @@ namespace Itsomax.Module.UserManagement.Controllers
 
                     catch (Exception ex)
                     {
-                        var Message = ex.Message;
+                        var message = ex.Message;
                         _logger.ErrorLog(ex.Message, "Disable User", ex.InnerException.Message, GetCurrentUserAsync().Result.UserName);
                         return Json(false);
                     }
@@ -411,19 +406,19 @@ namespace Itsomax.Module.UserManagement.Controllers
         }
 
         [HttpDelete]
-        public async Task<IActionResult> DeletePermanentlyUserPostView(long? Id)
+        public async Task<IActionResult> DeletePermanentlyUserPostView(long? id)
         {
-            if (Id == null)
+            if (id == null)
             {
                 _logger.InformationLog("Id is null", "Delete User", "", GetCurrentUserAsync().Result.UserName);
                 return Json(false);
             }
             else
             {
-                var user = await _userManager.FindByIdAsync(Id.ToString());
+                var user = await _userManager.FindByIdAsync(id.ToString());
                 if(user == null)
                 {
-                    _logger.InformationLog("User with "+Id+" not found", "Delete User", "", GetCurrentUserAsync().Result.UserName);
+                    _logger.InformationLog("User with "+id+" not found", "Delete User", "", GetCurrentUserAsync().Result.UserName);
                     return Json(false);
                 }
 
@@ -531,18 +526,18 @@ namespace Itsomax.Module.UserManagement.Controllers
 
         }
         
-        public IActionResult ChangePasswordUserView(long? Id)
+        public IActionResult ChangePasswordUserView(long? id)
         {
-            if (Id == null)
+            if (id == null)
                 return NotFound();
 
-            var user = _userManager.FindByIdAsync(Id.ToString()).Result;
+            var user = _userManager.FindByIdAsync(id.ToString()).Result;
             if (user == null)
                 return NotFound();
 
             var userChange = new ChangePasswordUserViewModel
             {
-                UserId = Id.Value,
+                UserId = id.Value,
                 UserName = user.UserName,
                 NewPassword = string.Empty,
                 ConfirmPassword = string.Empty

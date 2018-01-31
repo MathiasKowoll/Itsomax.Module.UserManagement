@@ -87,12 +87,16 @@ namespace Itsomax.Module.UserManagement.Controllers
                         foreach (var item in selectedModules)
                         {
                             var mod = _subModule.Query().FirstOrDefault(x => x.Name.Contains(item));
-                            ModuleRole modrole = new ModuleRole
+                            if (mod != null)
                             {
-                                RoleId = role.Id,
-                                SubModuleId = mod.Id
-                            };
-                            _modRoleRepository.Add(modrole);
+                                ModuleRole modrole = new ModuleRole
+                                {
+                                    RoleId = role.Id,
+                                    SubModuleId = mod.Id
+                                };
+                                _modRoleRepository.Add(modrole);
+                            }
+
                             _modRoleRepository.SaveChange();
                         }
                         _manageUser.UpdateClaimValueForRole();
@@ -161,14 +165,14 @@ namespace Itsomax.Module.UserManagement.Controllers
         }
 
         [HttpGet("/get/role/{Id}")]
-        public IActionResult EditRoleView(int? Id)
+        public IActionResult EditRoleView(int? id)
         {
-            if (Id == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
-            var role = _roleManager.FindByIdAsync(Id.Value.ToString()).Result;
+            var role = _roleManager.FindByIdAsync(id.Value.ToString()).Result;
             var subModules = _manageUser.GetRoleModulesToSelectListItem(role.Id);
             var roleEdit = new EditRoleViewModel
             {
@@ -216,21 +220,21 @@ namespace Itsomax.Module.UserManagement.Controllers
                     PositionClass = ToastPositions.TopCenter
                 });
                 _logger.InformationLog("Role " + model.RoleName + " not edited succesfully", "Edit Role", string.Empty, GetCurrentUserAsync().Result.UserName);
-                return View(model);
+                return View(nameof(EditRoleView),model);
             }
             
         }
 
         [HttpDelete]
-        public async Task<IActionResult> DeleteRoleView(int? Id)
+        public async Task<IActionResult> DeleteRoleView(int? id)
         {
-            if(Id == null)
+            if(id == null)
             {
                 return Json(false);
             }
             else
             {
-                var role = await _roleManager.FindByIdAsync(Id.Value.ToString());
+                var role = await _roleManager.FindByIdAsync(id.Value.ToString());
                 var res = await _roleManager.DeleteAsync(role);
                 if (res.Succeeded)
                 {

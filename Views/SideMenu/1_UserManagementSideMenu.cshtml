@@ -1,5 +1,6 @@
 ﻿@if ((User.HasClaim(c => c.Value.ToString() == "HasAccess" && (c.Type.Contains("User") || c.Type.Contains("Role"))) || User.IsInRole("Admin")))
 {
+    <hr class="m-t-0 m-b-40">
     <li class="nav-small-cap">USER MANAGEMENT</li>
 }
 @if ((User.HasClaim(c => c.Value.ToString() == "HasAccess" && (c.Type.Contains("RoleManagement"))) || User.IsInRole("Admin")))
