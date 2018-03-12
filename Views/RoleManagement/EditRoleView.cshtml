@@ -7,12 +7,12 @@
         <div class="col-lg-12">
             <div class="card card-outline-info">
                 <div class="card-header">
-                    <h2 class="m-b-0 text-themecolor">Create User</h2>
+                    <h2 class="m-b-0 text-themecolor">Edit Role</h2>
                 </div>
                 <div class="card-body">
                     <form class="form-horizontal p-t-20 justify-content-center" asp-controller="RoleManagement" asp-action="EditRolePostView" method="Post">
                         <div class="form-body">
-                            <h3 class="box-title">User Details</h3>
+                            <h3 class="box-title">Role Details</h3>
                             <hr class="m-t-0 m-b-40">
                             <div class="form-group row align-items-center">
                                 <input asp-for="Id" type="hidden" class="form-control" />
@@ -21,7 +21,11 @@
                                 <label for="rolename2" class="col-sm-2 text-right control-label " asp-for="RoleName"></label>
                                 <div class="col-sm-4">
                                     <div class="input-group">
-                                        <div class="input-group-addon"><i class="ti-user"></i></div>
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text" id="basic-addon1">
+                                                <i class="ti-user"></i>
+                                            </span>
+                                        </div>
                                         <input asp-for="RoleName" class="form-control" id="rolename2" placeholder="Role Name" />
                                     </div>
                                 </div>

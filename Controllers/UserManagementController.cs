@@ -172,7 +172,7 @@ namespace Itsomax.Module.UserManagement.Controllers
             return View(model);
         }
         [HttpGet("/get/user/{Id}")]
-        public async Task<IActionResult> EditUserView(int? id)
+        public async Task<IActionResult> EditUserView(long? id)
         {
             if (id == null)
             {
@@ -201,7 +201,7 @@ namespace Itsomax.Module.UserManagement.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditUserPostView(EditUserViewModel model, params string[] rolesAdd)
         {
-
+            var roles = _manageUser.GetUserRolesToSelectListItem(model.Id);
             if (ModelState.IsValid)
             {
                 var user = await _userManager.FindByIdAsync(model.Id.ToString());
@@ -212,6 +212,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                         PositionClass = ToastPositions.TopCenter
                     });
                     _logger.InformationLog("User " + model.UserName + " not found", "Edit User", string.Empty,GetCurrentUserAsync().Result.UserName);
+                    model.RolesList = roles;
                     return View(nameof(EditUserView), model);
                 }
                 if(user.Id != model.Id)
@@ -221,11 +222,38 @@ namespace Itsomax.Module.UserManagement.Controllers
                         PositionClass = ToastPositions.TopCenter
                     });
                     _logger.InformationLog("User " + model.UserName + " not found", "Edit User", "The user Id do not correspond between model and user", GetCurrentUserAsync().Result.UserName);
+                    model.RolesList = roles;
                     return View(nameof(EditUserView), model);
                 }
+                
+                if (user.UserName.ToUpper() == "ADMIN")
+                {
+                    if (model.IsDeleted)
+                    {
+                        _toastNotification.AddToastMessage("The user: " + model.UserName + " cannot be disabled", "", ToastEnums.ToastType.Warning, new ToastOption()
+                        {
+                            PositionClass = ToastPositions.TopCenter
+                        });
+                        _logger.InformationLog("User " + model.UserName + " cannot be disabled", "Edit User", "tried to disable ADMIN user account", GetCurrentUserAsync().Result.UserName);
+                        model.RolesList = roles;
+                        return View(nameof(EditUserView), model);
+                    }
+                    if (model.UserName.ToUpper() != "ADMIN")
+                    {
+                        _toastNotification.AddToastMessage("The user: " + model.UserName + " cannot be disabled", "", ToastEnums.ToastType.Warning, new ToastOption()
+                        {
+                            PositionClass = ToastPositions.TopCenter
+                        });
+                        _logger.InformationLog("User " + model.UserName + " name cannot be changed", "Edit User", "tried to change ADMIN user account name", GetCurrentUserAsync().Result.UserName);
+                        model.RolesList = roles;
+                        return View(nameof(EditUserView), model);
+                    }
+                }
+
                 user.Email = model.Email;
                 user.UserName = model.UserName;
                 user.IsDeleted = model.IsDeleted;
+
 
                 var res = await _userManager.UpdateAsync(user);
                 if (res.Succeeded)
@@ -260,6 +288,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                                     });
                                     ModelState.AddModelError(nameof(EditUserViewModel.IsLocked), AddErrorList(resL));
                                     _logger.InformationLog("Failed editing user " + model.UserName + ", could not set lockout for user", "Edit User", AddErrorList(resL), GetCurrentUserAsync().Result.UserName);
+                                    model.RolesList = roles;
                                     return View(nameof(EditUserView),model);
                                 }
    
@@ -287,6 +316,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                                         PositionClass = ToastPositions.TopCenter
                                     });
                                     _logger.InformationLog("Failed editing user " + model.UserName + ", could not set lockout for user", "Edit User", AddErrorList(resL), GetCurrentUserAsync().Result.UserName);
+                                    model.RolesList = roles;
                                     return View(nameof(EditUserView), model);
                                 }
                             }
@@ -299,6 +329,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                                 PositionClass = ToastPositions.TopCenter
                             });
                             _logger.InformationLog("Failed editing user " + model.UserName + ", could not update roles", "Edit User", AddErrorList(resAdd), GetCurrentUserAsync().Result.UserName);
+                            model.RolesList = roles;
                             return View(nameof(EditUserView), model);
                         }
                     }
@@ -309,6 +340,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                             PositionClass = ToastPositions.TopCenter
                         });
                         _logger.InformationLog("Failed editing user " + model.UserName + ", could not update roles", "Edit User", AddErrorList(resDel), GetCurrentUserAsync().Result.UserName);
+                        model.RolesList = roles;
                         return View(nameof(EditUserView), model);
                     }
                 }
@@ -321,11 +353,13 @@ namespace Itsomax.Module.UserManagement.Controllers
                     _logger.InformationLog("Failed editing user " + model.UserName + ", could not update roles", "Edit User", AddErrorList(res), GetCurrentUserAsync().Result.UserName);
                     _manageUser.CreateUserAddDefaultClaim(model.Id);
                     _manageUser.UpdateClaimValueForRole();
+                    model.RolesList = roles;
                     return View(nameof(EditUserView), model);
                 }
             }
             else
             {
+                model.RolesList = roles;
                 return View(nameof(EditUserView), model);
             }
         }
