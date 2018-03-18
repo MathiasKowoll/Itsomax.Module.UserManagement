@@ -76,7 +76,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                         if (resClaimsAdd)
                         {
                             _manageUser.UpdateClaimValueForRole();
-                            _toastNotification.AddToastMessage("User: " + model.UserName + " create succesfully", "", ToastEnums.ToastType.Success, new ToastOption()
+                            _toastNotification.AddToastMessage("User: " + model.UserName + " create succesfully", "", Enums.ToastType.Success, new ToastOption()
                             {
                                 PositionClass = ToastPositions.TopCenter
                             });
@@ -88,7 +88,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                     {
                         await _userManager.DeleteAsync(user);
                         _logger.InformationLog("Error while creating user " + model.UserName, "Create user", AddErrorList(resAddRole), GetCurrentUserAsync().Result.UserName);
-                        _toastNotification.AddToastMessage("User: " + model.UserName + " not created", "", ToastEnums.ToastType.Error, new ToastOption()
+                        _toastNotification.AddToastMessage("User: " + model.UserName + " not created", "", Enums.ToastType.Error, new ToastOption()
                         {
                             PositionClass = ToastPositions.TopCenter
                         });
@@ -96,7 +96,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                     }
                 }
                 _logger.InformationLog("Error while creating user " + model.UserName, "Create user", AddErrorList(resCreateUser), GetCurrentUserAsync().Result.UserName);
-                _toastNotification.AddToastMessage("User: " + model.UserName + " not created", "Error: "+resCreateUser.Errors, ToastEnums.ToastType.Error, new ToastOption()
+                _toastNotification.AddToastMessage("User: " + model.UserName + " not created", "Error: "+resCreateUser.Errors, Enums.ToastType.Error, new ToastOption()
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
@@ -127,7 +127,7 @@ namespace Itsomax.Module.UserManagement.Controllers
             var user = await _userManager.FindByNameAsync(model.UserName);
             if (user==null)
             {
-                _toastNotification.AddToastMessage("Invalid user or password, please try again", "", ToastEnums.ToastType.Warning, new ToastOption()
+                _toastNotification.AddToastMessage("Invalid user or password, please try again", "", Enums.ToastType.Warning, new ToastOption()
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
@@ -136,7 +136,7 @@ namespace Itsomax.Module.UserManagement.Controllers
             }
             if (user.IsDeleted)
             {
-                _toastNotification.AddToastMessage("Invalid user or password, please try again", "", ToastEnums.ToastType.Warning, new ToastOption()
+                _toastNotification.AddToastMessage("Invalid user or password, please try again", "", Enums.ToastType.Warning, new ToastOption()
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
@@ -157,14 +157,14 @@ namespace Itsomax.Module.UserManagement.Controllers
             }
             if (res.IsLockedOut)
             {
-                _toastNotification.AddToastMessage("User is locked out, please contact your system administrator", "", ToastEnums.ToastType.Warning, new ToastOption()
+                _toastNotification.AddToastMessage("User is locked out, please contact your system administrator", "", Enums.ToastType.Warning, new ToastOption()
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
                 _logger.InformationLog("User " + user.UserName + " lockout", "Login",string.Empty,user.UserName);
                 return View(model);
             }
-            _toastNotification.AddToastMessage("Invalid user or password, please try again", "", ToastEnums.ToastType.Warning, new ToastOption()
+            _toastNotification.AddToastMessage("Invalid user or password, please try again", "", Enums.ToastType.Warning, new ToastOption()
             {
                 PositionClass = ToastPositions.TopCenter
             });
@@ -207,7 +207,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                 var user = await _userManager.FindByIdAsync(model.Id.ToString());
                 if(user == null)
                 {
-                    _toastNotification.AddToastMessage("The user: " + model.UserName + " not found", "", ToastEnums.ToastType.Error, new ToastOption()
+                    _toastNotification.AddToastMessage("The user: " + model.UserName + " not found", "", Enums.ToastType.Error, new ToastOption()
                     {
                         PositionClass = ToastPositions.TopCenter
                     });
@@ -217,7 +217,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                 }
                 if(user.Id != model.Id)
                 {
-                    _toastNotification.AddToastMessage("The user: " + model.UserName + " not found", "", ToastEnums.ToastType.Error, new ToastOption()
+                    _toastNotification.AddToastMessage("The user: " + model.UserName + " not found", "", Enums.ToastType.Error, new ToastOption()
                     {
                         PositionClass = ToastPositions.TopCenter
                     });
@@ -230,7 +230,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                 {
                     if (model.IsDeleted)
                     {
-                        _toastNotification.AddToastMessage("The user: " + model.UserName + " cannot be disabled", "", ToastEnums.ToastType.Warning, new ToastOption()
+                        _toastNotification.AddToastMessage("The user: " + model.UserName + " cannot be disabled", "", Enums.ToastType.Warning, new ToastOption()
                         {
                             PositionClass = ToastPositions.TopCenter
                         });
@@ -240,7 +240,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                     }
                     if (model.UserName.ToUpper() != "ADMIN")
                     {
-                        _toastNotification.AddToastMessage("The user: " + model.UserName + " cannot be disabled", "", ToastEnums.ToastType.Warning, new ToastOption()
+                        _toastNotification.AddToastMessage("The user: " + model.UserName + " cannot be disabled", "", Enums.ToastType.Warning, new ToastOption()
                         {
                             PositionClass = ToastPositions.TopCenter
                         });
@@ -270,7 +270,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                                 var resL = await _userManager.SetLockoutEndDateAsync(user, Convert.ToDateTime("3000-01-01"));
                                 if(resL.Succeeded)
                                 {
-                                    _toastNotification.AddToastMessage("User: " + model.UserName + " modified succesfully", "", ToastEnums.ToastType.Success, new ToastOption()
+                                    _toastNotification.AddToastMessage("User: " + model.UserName + " modified succesfully", "", Enums.ToastType.Success, new ToastOption()
                                     {
                                         PositionClass = ToastPositions.TopCenter,
                                         PreventDuplicates = true
@@ -282,7 +282,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                                 }
                                 else
                                 {
-                                    _toastNotification.AddToastMessage("Failed editing user " + model.UserName+ ", could not set lockout for user","", ToastEnums.ToastType.Error, new ToastOption()
+                                    _toastNotification.AddToastMessage("Failed editing user " + model.UserName+ ", could not set lockout for user","", Enums.ToastType.Error, new ToastOption()
                                     {
                                         PositionClass = ToastPositions.TopCenter
                                     });
@@ -299,7 +299,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                                 var resL = await _userManager.SetLockoutEndDateAsync(user, Convert.ToDateTime("1970-01-01"));
                                 if (resL.Succeeded)
                                 {
-                                    _toastNotification.AddToastMessage("User: " + model.UserName + " modified succesfully", "", ToastEnums.ToastType.Success, new ToastOption()
+                                    _toastNotification.AddToastMessage("User: " + model.UserName + " modified succesfully", "", Enums.ToastType.Success, new ToastOption()
                                     {
                                         PositionClass = ToastPositions.TopCenter,
                                         PreventDuplicates = true
@@ -311,7 +311,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                                 }
                                 else
                                 {
-                                    _toastNotification.AddToastMessage("Failed editing user " + model.UserName +", could not set lockout for user","", ToastEnums.ToastType.Error, new ToastOption()
+                                    _toastNotification.AddToastMessage("Failed editing user " + model.UserName +", could not set lockout for user","", Enums.ToastType.Error, new ToastOption()
                                     {
                                         PositionClass = ToastPositions.TopCenter
                                     });
@@ -324,7 +324,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                         }
                         else
                         {
-                            _toastNotification.AddToastMessage("Failed editing user " + model.UserName+ ", could not update roles","", ToastEnums.ToastType.Error, new ToastOption()
+                            _toastNotification.AddToastMessage("Failed editing user " + model.UserName+ ", could not update roles","", Enums.ToastType.Error, new ToastOption()
                             {
                                 PositionClass = ToastPositions.TopCenter
                             });
@@ -335,7 +335,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                     }
                     else
                     {
-                        _toastNotification.AddToastMessage("Failed editing user " + model.UserName+ ", could not update roles","", ToastEnums.ToastType.Error, new ToastOption()
+                        _toastNotification.AddToastMessage("Failed editing user " + model.UserName+ ", could not update roles","", Enums.ToastType.Error, new ToastOption()
                         {
                             PositionClass = ToastPositions.TopCenter
                         });
@@ -346,7 +346,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                 }
                 else
                 {
-                    _toastNotification.AddToastMessage("Failed editing user " + model.UserName + ", could not update roles", " ", ToastEnums.ToastType.Success, new ToastOption()
+                    _toastNotification.AddToastMessage("Failed editing user " + model.UserName + ", could not update roles", " ", Enums.ToastType.Success, new ToastOption()
                     {
                         PositionClass = ToastPositions.TopCenter
                     });
@@ -496,8 +496,9 @@ namespace Itsomax.Module.UserManagement.Controllers
         {
             var user = GetCurrentUserAsync().Result;
             ViewBag.UserId = user.Id;
-            return View();
+           return View();
         }
+
         [HttpGet]
         [Route("/get/all/active/users/json/")]
         public JsonResult ListActiveUsersJsonView()
@@ -516,7 +517,7 @@ namespace Itsomax.Module.UserManagement.Controllers
             }
             catch(Exception ex)
             {
-                _toastNotification.AddToastMessage("An error ocurred: "+ex.Message, "", ToastEnums.ToastType.Error, new ToastOption()
+                _toastNotification.AddToastMessage("An error ocurred: "+ex.Message, "", Enums.ToastType.Error, new ToastOption()
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
@@ -540,7 +541,7 @@ namespace Itsomax.Module.UserManagement.Controllers
             var res = _userManager.ChangePasswordAsync(currentUser, model.CurrentPassword, model.NewPassword).Result;
             if(res.Succeeded)
             {
-                _toastNotification.AddToastMessage("Your password has been changed succesfully", "",ToastEnums.ToastType.Success,new ToastOption()
+                _toastNotification.AddToastMessage("Your password has been changed succesfully", "",Enums.ToastType.Success,new ToastOption()
                 {
                     PositionClass=ToastPositions.TopCenter
                 });
@@ -549,7 +550,7 @@ namespace Itsomax.Module.UserManagement.Controllers
             }
             else
             {
-                _toastNotification.AddToastMessage("There was a problem changing your password", "", ToastEnums.ToastType.Error,new ToastOption()
+                _toastNotification.AddToastMessage("There was a problem changing your password", "", Enums.ToastType.Error,new ToastOption()
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
@@ -585,7 +586,7 @@ namespace Itsomax.Module.UserManagement.Controllers
         {
             if(model.NewPassword == string.Empty)
             {
-                _toastNotification.AddToastMessage("Your password has not been changed, please try a new one", "", ToastEnums.ToastType.Warning, new ToastOption()
+                _toastNotification.AddToastMessage("Your password has not been changed, please try a new one", "", Enums.ToastType.Warning, new ToastOption()
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
@@ -600,7 +601,7 @@ namespace Itsomax.Module.UserManagement.Controllers
             var res =  await _userManager.ResetPasswordAsync(user,token,model.NewPassword);
             if (res.Succeeded)
             {
-                _toastNotification.AddToastMessage("Password for user " + user.UserName + " changed succesfully", "", ToastEnums.ToastType.Success, new ToastOption()
+                _toastNotification.AddToastMessage("Password for user " + user.UserName + " changed succesfully", "", Enums.ToastType.Success, new ToastOption()
                 {
                     PositionClass = ToastPositions.TopCenter
                 });

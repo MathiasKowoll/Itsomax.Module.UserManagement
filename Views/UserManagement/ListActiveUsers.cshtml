@@ -1,33 +1,33 @@
-<div class="container-fluid">
-    <div class="col-xs-12">
-        <br />
-        <div class="card card-outline-info">
-            <div class="card-header">
-                <h2 class="m-b-0 text-themecolor">All active users</h2>
-            </div>
-            <div class="card-body">
+    <div class="container-fluid">
+        <div class="col-xs-12">
+            <br />
+            <div class="card card-outline-info">
+                <div class="card-header">
+                    <h2 class="m-b-0 text-themecolor">All active users</h2>
+                </div>
+                <div class="card-body">
 
-                <table id="users" class="table table-bordered table-hover">
-                    <thead>
-                        <tr>
-                            <th>Id</th>
-                            <th>UserName</th>
-                            <th>Email</th>
-                            <th>Is Disabled</th>
-                            <th>Updated</th>
-                        </tr>
-                    </thead>
-                </table>
-                <br />
-                <a asp-controller="UserManagement" asp-action="CreateUser" class="btn btn-info waves-effect waves-light">Create User</a>
+                    <table id="users" class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>Id</th>
+                                <th>UserName</th>
+                                <th>Email</th>
+                                <th>Is Disabled</th>
+                                <th>Updated</th>
+                            </tr>
+                        </thead>
+                    </table>
+                    <br />
+                    <a asp-controller="UserManagement" asp-action="CreateUser" class="btn btn-info waves-effect waves-light">Create User</a>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
- @section scripts{
+    @section scripts{
     <script src="https://cdn.datatables.net/select/1.2.2/js/dataTables.select.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/1.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.2.2/js/dataTables.buttons.min.js"></script>
     <script>
         $(document).ready(function () {
             var table = $('#users').DataTable({
@@ -86,142 +86,136 @@
                                 });
                             }
                             if (@ViewBag.UserId == rowData.id)
-                            {
-                                        toastr.error('', 'You cannot disable yourself', { positionClass: 'toast-top-center' });
-                                        table.ajax.reload;
-                            }
-                            else
-                            {
-                                var title = '';
-                                var content = ''
-                                if (rowData.isDeleted == true)
-                                {
-                                    titleConfirm = 'Enable User'
-                                    contentConfirm = 'enable'
-                                }
+            {
+                toastr.error('', 'You cannot disable yourself', { positionClass: 'toast-top-center' });
+                table.ajax.reload;
+            }
                                 else
-                                {
-                                    titleConfirm = 'Disable user'
-                                    contentConfirm = 'disable'
-                                }
-                                $.confirm({
-                                    title: titleConfirm,
-                                    content: 'Are you sure do you want to ' + contentConfirm + ' user: ' + rowData.userName + '?',
-                                    buttons: {
-                                                confirm: function () {
-                                                    $.ajax({
-                                                        url: '/UserManagement/DeleteUserPostView/'+rowData.id,
-                                                        type: 'DELETE',
-                                                        success: function (obj) {
-                                                            toastr.success('', 'User: ' + rowData.userName + ' ' + contentConfirm + ' succesfully', { positionClass: 'toast-top-center' });
-                                                            table.ajax.reload();
-                                                        },
-                                                        error: function (obj) {
-                                                            table.ajax.reload();
-                                                            toastr.error('', 'User: ' + rowData.userName + ' could not be enabled/disabled', { positionClass: 'toast-top-center' });
-                                                        }
-                                                    });
-                                                },
-                                                cancel: function () {
-                                                    table.ajax.reload();
-                                                }
-                                }
-                                });
-                            }
-                            },
-                                enabled: false
-                            },
-                            {
-                                text: 'Edit',
-                                action: function (e, dt, node, config) {
-                                    var rowData= dt.row( { selected: true } ).data()
-                                    if(rowData == null)
-                                    {
-                                        $.alert({
-                                            title: 'No user selected!',
-                                            content: 'No user has been selected, to continue please select a user.',
-                                        });
-                                    }
-                                    else
-                                    {
-                                    window.location.href = '/get/user/'+rowData.id
-                                    //'/get/user/'+rowData.id
-                                    }
+            {
+                var title = '';
+                var content = ''
+                if (rowData.isDeleted == true) {
+                    titleConfirm = 'Enable User'
+                    contentConfirm = 'enable'
+                }
+                else {
+                    titleConfirm = 'Disable user'
+                    contentConfirm = 'disable'
+                }
+                $.confirm({
+                    title: titleConfirm,
+                    content: 'Are you sure do you want to ' + contentConfirm + ' user: ' + rowData.userName + '?',
+                    buttons: {
+                        confirm: function () {
+                            $.ajax({
+                                url: '/UserManagement/DeleteUserPostView/' + rowData.id,
+                                type: 'DELETE',
+                                success: function (obj) {
+                                    toastr.success('', 'User: ' + rowData.userName + ' ' + contentConfirm + ' succesfully', { positionClass: 'toast-top-center' });
+                                    table.ajax.reload();
                                 },
-                                enabled: false
-                            },
-                            {
-                                text: 'Delete',
-                                action: function (e, dt, node, config) {
-                                    var rowData = dt.row({ selected: true }).data()
-                                    if (rowData == null) {
-                                        $.alert({
-                                            title: 'No user selected!',
-                                            content: 'No user has been selected, to continue please select an user.',
-                                        });
-                                    }
-                                    if (@ViewBag.UserId == rowData.id) {
-                                        toastr.error('', 'You cannot delete yourself', { positionClass: 'toast-top-center' });
-                                        table.ajax.reload;
-                                    }
-                                    else
-                                    {
-                                        if (rowData.isDeleted == false)
-                                        {
-                                            toastr.error('', 'User must be disabled to be able to delete it', { positionClass: 'toast-top-center' });
-                                        }
+                                error: function (obj) {
+                                    table.ajax.reload();
+                                    toastr.error('', 'User: ' + rowData.userName + ' could not be enabled/disabled', { positionClass: 'toast-top-center' });
+                                }
+                            });
+                        },
+                        cancel: function () {
+                            table.ajax.reload();
+                        }
+                    }
+                });
+            }
+        },
+            enabled: false
+                                },
+            {
+                text: 'Edit',
+                action: function (e, dt, node, config) {
+                    var rowData = dt.row({ selected: true }).data()
+                    if (rowData == null) {
+                        $.alert({
+                            title: 'No user selected!',
+                            content: 'No user has been selected, to continue please select a user.',
+                        });
+                    }
+                    else {
+                        window.location.href = '/get/user/' + rowData.id
+                        //'/get/user/'+rowData.id
+                    }
+                },
+                enabled: false
+            },
+            {
+                text: 'Delete',
+                action: function (e, dt, node, config) {
+                    var rowData = dt.row({ selected: true }).data()
+                    if (rowData == null) {
+                        $.alert({
+                            title: 'No user selected!',
+                            content: 'No user has been selected, to continue please select an user.',
+                        });
+                    }
+                    if (@ViewBag.UserId == rowData.id) {
+            toastr.error('', 'You cannot delete yourself', { positionClass: 'toast-top-center' });
+            table.ajax.reload;
+        }
                                         else
-                                        {
-                                            $.confirm({
-                                                title: 'Delete user',
-                                                content: 'Are you sure do you want to delete: ' + rowData.userName + '?',
-                                                buttons: {
-                                                    confirm: function () {
-                                                        $.ajax({
-                                                            url: '/UserManagement/DeletePermanentlyUserPostView/' + rowData.id,
-                                                            type: 'DELETE',
-                                                            success: function (obj) {
-                                                                table.ajax.reload();
-                                                                toastr.success('', 'User: ' + rowData.userName + ' deleted succesfully', { positionClass: 'toast-top-center' });
+        {
+            if (rowData.isDeleted == false) {
+                toastr.error('', 'User must be disabled to be able to delete it', { positionClass: 'toast-top-center' });
+            }
+            else {
+                $.confirm({
+                    title: 'Delete user',
+                    content: 'Are you sure do you want to delete: ' + rowData.userName + '?',
+                    buttons: {
+                        confirm: function () {
+                            $.ajax({
+                                url: '/UserManagement/DeletePermanentlyUserPostView/' + rowData.id,
+                                type: 'DELETE',
+                                success: function (obj) {
+                                    table.ajax.reload();
+                                    toastr.success('', 'User: ' + rowData.userName + ' deleted succesfully', { positionClass: 'toast-top-center' });
 
-                                                            },
-                                                            error: function (obj) {
-                                                                table.ajax.reload();
-                                                                toastr.error('', 'User: ' + rowData.userName + ' could not be deleted', { positionClass: 'toast-top-center' });
-                                                            }
-                                                        });
-                                                    },
-                                                    cancel: function () {
-                                                        table.ajax.reload();
-                                                    }
-                                                }
-                                            });
-                                        }
-                                    }
                                 },
-                                enabled: false
+                                error: function (obj) {
+                                    table.ajax.reload();
+                                    toastr.error('', 'User: ' + rowData.userName + ' could not be deleted', { positionClass: 'toast-top-center' });
+                                }
+                            });
+                        },
+                        cancel: function () {
+                            table.ajax.reload();
+                        }
+                    }
+                });
+            }
+        }
+                                    },
+        enabled: false
 
-                            }
-                        ]
-                    });
-                    table.on( 'select', function () {
-                        var selectedRows = table.rows( { selected: true } ).count();
-                        table.button(0).enable(selectedRows == 1);
-                        table.button(1).enable(selectedRows == 1);
-                        table.button(2).enable(selectedRows == 1);
-                    } );
-                    table.on( 'deselect',function() {
-                        //var unselectedRows = table.rows( {selected: false} ).count();
-                        table.button(0).disable();
-                        table.button(1).disable();
-                        table.button(2).disable();
-                    });
-                    
-
-
-                    setInterval(function () {
-                        table.ajax.reload();
-                    }, 30000);
+                                }
+                            ]
+                        });
+        table.on('select', function () {
+            var selectedRows = table.rows({ selected: true }).count();
+            table.button(0).enable(selectedRows == 1);
+            table.button(1).enable(selectedRows == 1);
+            table.button(2).enable(selectedRows == 1);
         });
+        table.on('deselect', function () {
+            //var unselectedRows = table.rows( {selected: false} ).count();
+            table.button(0).disable();
+            table.button(1).disable();
+            table.button(2).disable();
+        });
+
+
+
+        setInterval(function () {
+            table.ajax.reload();
+        }, 30000);
+            });
     </script>
-}
+    }

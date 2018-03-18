@@ -57,7 +57,7 @@ namespace Itsomax.Module.UserManagement.Controllers
             }
             catch(Exception ex)
             {
-                _toastNotification.AddToastMessage("Error ocurrerd: "+ex, "", ToastEnums.ToastType.Success, new ToastOption()
+                _toastNotification.AddToastMessage("Error ocurrerd: "+ex, "", Enums.ToastType.Success, new ToastOption()
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
@@ -100,7 +100,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                             _modRoleRepository.SaveChange();
                         }
                         _manageUser.UpdateClaimValueForRole();
-                        _toastNotification.AddToastMessage("Role: " + model.RoleName + " created succesfully", "", ToastEnums.ToastType.Success, new ToastOption()
+                        _toastNotification.AddToastMessage("Role: " + model.RoleName + " created succesfully", "", Enums.ToastType.Success, new ToastOption()
                         {
                             PositionClass = ToastPositions.TopCenter
                         });
@@ -109,7 +109,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                     }
                     catch (Exception ex)
                     {
-                        _toastNotification.AddToastMessage("Could not create role: " + model.RoleName, "", ToastEnums.ToastType.Error, new ToastOption()
+                        _toastNotification.AddToastMessage("Could not create role: " + model.RoleName, "", Enums.ToastType.Error, new ToastOption()
                         {
                             PositionClass = ToastPositions.TopCenter
                         });
@@ -120,7 +120,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                 }
                 else
                 {
-                    _toastNotification.AddToastMessage("Could not create role: " + model.RoleName, "", ToastEnums.ToastType.Error, new ToastOption()
+                    _toastNotification.AddToastMessage("Could not create role: " + model.RoleName, "", Enums.ToastType.Error, new ToastOption()
                     {
                         PositionClass = ToastPositions.TopCenter
                     });
@@ -149,7 +149,7 @@ namespace Itsomax.Module.UserManagement.Controllers
             }
             catch(Exception ex)
             {
-                _toastNotification.AddToastMessage("An error ocurred", "", ToastEnums.ToastType.Error, new ToastOption()
+                _toastNotification.AddToastMessage("An error ocurred", "", Enums.ToastType.Error, new ToastOption()
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
@@ -194,7 +194,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                 if (res.Succeeded)
                 {
                     _manageUser.UpdateClaimValueForRole();
-                    _toastNotification.AddToastMessage("Role: " + model.RoleName + " edited succesfully", "", ToastEnums.ToastType.Success, new ToastOption()
+                    _toastNotification.AddToastMessage("Role: " + model.RoleName + " edited succesfully", "", Enums.ToastType.Success, new ToastOption()
                     {
                         PositionClass = ToastPositions.TopCenter
                     });
@@ -203,7 +203,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                 }
                 else
                 {
-                    _toastNotification.AddToastMessage("Could not edit role: " + model.RoleName, "", ToastEnums.ToastType.Error, new ToastOption()
+                    _toastNotification.AddToastMessage("Could not edit role: " + model.RoleName, "", Enums.ToastType.Error, new ToastOption()
                     {
                         PositionClass = ToastPositions.TopCenter
                     });
@@ -215,7 +215,7 @@ namespace Itsomax.Module.UserManagement.Controllers
             }
             else
             {
-                _toastNotification.AddToastMessage("Could not edit role: " + model.RoleName, "", ToastEnums.ToastType.Error, new ToastOption()
+                _toastNotification.AddToastMessage("Could not edit role: " + model.RoleName, "", Enums.ToastType.Error, new ToastOption()
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
