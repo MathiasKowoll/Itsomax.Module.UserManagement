@@ -10,7 +10,9 @@ using Itsomax.Data.Infrastructure.Data;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
+using Microsoft.AspNetCore.Http;
 using NToastNotify;
+//using NToastNotify.Libraries;
 
 namespace Itsomax.Module.UserManagement.Controllers
 {
@@ -21,8 +23,8 @@ namespace Itsomax.Module.UserManagement.Controllers
         private readonly SignInManager<User> _signIn;
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<Role> _roleManager;
-        private readonly ICreateMenu _createMenu;
-        private readonly IRepository<AppSetting> _appSettings;
+        //private readonly ICreateMenu _createMenu;
+        //private readonly IRepository<AppSetting> _appSettings;
         private readonly IToastNotification _toastNotification;
         private readonly ILogginToDatabase _logger;
 
@@ -31,15 +33,15 @@ namespace Itsomax.Module.UserManagement.Controllers
         ILogginToDatabase logger, IRepository<AppSetting> appSettings)
         {
             _manageUser=manageUser;
-            _createMenu = createMenu;
+            //_createMenu = createMenu;
             _signIn = signIn;
             _userManager = user;
             _roleManager = roleManage;
             _toastNotification = toastNotification;
             _logger = logger;
-            _appSettings = appSettings;
+            //_appSettings = appSettings;
         }
-
+        //[CheckSessionOut]
         public IActionResult CreateUser()
         {
             var userModel = new CreateUserViewModel
@@ -59,57 +61,34 @@ namespace Itsomax.Module.UserManagement.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = new User()
-                {
-                    Email = model.Email,
-                    UserName = model.UserName
-                };
 
-                var resCreateUser = await _userManager.CreateAsync(user, model.Password);
-                
-                if (resCreateUser.Succeeded)
+                var res = await _manageUser.CreateUserAsync(model, selectedRoles);
+                if (res.Succeeded)
                 {
-                    var resAddRole = await _userManager.AddToRolesAsync(user, selectedRoles);
-                    if (resAddRole.Succeeded)
+                    _toastNotification.AddSuccessToastMessage("User: " + model.UserName + " create succesfully", new ToastrOptions()
                     {
-                        var resClaimsAdd = _manageUser.CreateUserAddDefaultClaim(user.Id);
-                        if (resClaimsAdd)
-                        {
-                            _manageUser.UpdateClaimValueForRole();
-                            _toastNotification.AddToastMessage("User: " + model.UserName + " create succesfully", "", Enums.ToastType.Success, new ToastOption()
-                            {
-                                PositionClass = ToastPositions.TopCenter
-                            });
-                            _logger.InformationLog("User "+user.UserName+" has been created succesfully", "Create user", string.Empty, GetCurrentUserAsync().Result.UserName);
-                            return RedirectToAction("ListActiveUsers");
-                        }
-                    }
-                    else
-                    {
-                        await _userManager.DeleteAsync(user);
-                        _logger.InformationLog("Error while creating user " + model.UserName, "Create user", AddErrorList(resAddRole), GetCurrentUserAsync().Result.UserName);
-                        _toastNotification.AddToastMessage("User: " + model.UserName + " not created", "", Enums.ToastType.Error, new ToastOption()
-                        {
-                            PositionClass = ToastPositions.TopCenter
-                        });
-                        return View(nameof(CreateUser),model);
-                    }
+                        PositionClass = ToastPositions.TopCenter
+                    });
+                    _logger.InformationLog("User "+model.UserName+" has been created succesfully", "Create user", string.Empty, GetCurrentUserAsync().Result.UserName);
+                    return RedirectToAction("ListActiveUsers");
                 }
-                _logger.InformationLog("Error while creating user " + model.UserName, "Create user", AddErrorList(resCreateUser), GetCurrentUserAsync().Result.UserName);
-                _toastNotification.AddToastMessage("User: " + model.UserName + " not created", "Error: "+resCreateUser.Errors, Enums.ToastType.Error, new ToastOption()
+                else
                 {
-                    PositionClass = ToastPositions.TopCenter
-                });
-                return View(nameof(CreateUser),model);
+                    _logger.InformationLog(res.Errors, "Create user", "", GetCurrentUserAsync().Result.UserName);
+                    _toastNotification.AddErrorToastMessage(res.Errors, new ToastrOptions()
+                    {
+                        PositionClass = ToastPositions.TopCenter
+                    });
+                    return View(nameof(CreateUser),model);
+                }
             }
             else
                 return View(nameof(CreateUser),model);
-
         }
 
         [HttpGet]
         [AllowAnonymous]
-        [Route("login")]
+        [Route("Login")]
         public IActionResult LoginView(string returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
@@ -119,57 +98,28 @@ namespace Itsomax.Module.UserManagement.Controllers
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
-        [Route("login")]
+        [Route("Login")]
         public async Task<IActionResult> LoginView(LoginUserViewModel model ,string returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
             if (!ModelState.IsValid) return View(model);
-            var user = await _userManager.FindByNameAsync(model.UserName);
-            if (user==null)
-            {
-                _toastNotification.AddToastMessage("Invalid user or password, please try again", "", Enums.ToastType.Warning, new ToastOption()
-                {
-                    PositionClass = ToastPositions.TopCenter
-                });
-                _logger.InformationLog("User does not exists or tried to enter null value for user.","Login",string.Empty,model.UserName);
-                return View(model);
-            }
-            if (user.IsDeleted)
-            {
-                _toastNotification.AddToastMessage("Invalid user or password, please try again", "", Enums.ToastType.Warning, new ToastOption()
-                {
-                    PositionClass = ToastPositions.TopCenter
-                });
-                _logger.InformationLog("User: "+user.UserName+" has been deleted","Login");
-                return View(model);
-            }
-            _manageUser.AddDefaultClaimAllUsers();
-            _manageUser.UpdateClaimValueForRole();
-            var res = await _signIn.PasswordSignInAsync(user,model.Password,model.RememberMe,true);
+            var res = await _manageUser.UserLoginAsync(model);
             if (res.Succeeded)
             {
-                if(_appSettings.Query().Any(x => x.Key== "NewModuleCreateMenu" && x.Value=="true"))
-                {
-                    _createMenu.CreteMenuFile();
-                }
-                _logger.InformationLog("User: "+user.UserName+" succesful login","Login",res.ToString(),user.UserName);
+                HttpContext.Session.SetString("SessionId",model.UserName.ToUpper());
+                _logger.InformationLog("User: "+model.UserName+" succesful login","Login",res.ToString(),model.UserName);
                 return RedirectToLocal(returnUrl);
             }
-            if (res.IsLockedOut)
+            else
             {
-                _toastNotification.AddToastMessage("User is locked out, please contact your system administrator", "", Enums.ToastType.Warning, new ToastOption()
+                _toastNotification.AddWarningToastMessage("Invalid user or password, please try again", new ToastrOptions()
                 {
-                    PositionClass = ToastPositions.TopCenter
+                    PositionClass = ToastPositions.TopCenter,
+                    
                 });
-                _logger.InformationLog("User " + user.UserName + " lockout", "Login",string.Empty,user.UserName);
+                _logger.InformationLog(res.Errors,"Login",string.Empty,model.UserName);
                 return View(model);
             }
-            _toastNotification.AddToastMessage("Invalid user or password, please try again", "", Enums.ToastType.Warning, new ToastOption()
-            {
-                PositionClass = ToastPositions.TopCenter
-            });
-            _logger.InformationLog("User " + user.UserName + " does not exists or tried to enter null value for user.", "Login", string.Empty, model.UserName);
-            return View(model);
         }
         [HttpGet("/get/user/{Id}")]
         public async Task<IActionResult> EditUserView(long? id)
@@ -204,157 +154,26 @@ namespace Itsomax.Module.UserManagement.Controllers
             var roles = _manageUser.GetUserRolesToSelectListItem(model.Id);
             if (ModelState.IsValid)
             {
-                var user = await _userManager.FindByIdAsync(model.Id.ToString());
-                if(user == null)
+                var res = await _manageUser.EditUserAsync(model, rolesAdd);
+                if (!res.Succeeded)
                 {
-                    _toastNotification.AddToastMessage("The user: " + model.UserName + " not found", "", Enums.ToastType.Error, new ToastOption()
+                    _toastNotification.AddErrorToastMessage(res.Errors, new ToastrOptions()
                     {
                         PositionClass = ToastPositions.TopCenter
                     });
-                    _logger.InformationLog("User " + model.UserName + " not found", "Edit User", string.Empty,GetCurrentUserAsync().Result.UserName);
+                    _logger.InformationLog(res.Errors, "Edit User", string.Empty,GetCurrentUserAsync().Result.UserName);
                     model.RolesList = roles;
                     return View(nameof(EditUserView), model);
-                }
-                if(user.Id != model.Id)
-                {
-                    _toastNotification.AddToastMessage("The user: " + model.UserName + " not found", "", Enums.ToastType.Error, new ToastOption()
-                    {
-                        PositionClass = ToastPositions.TopCenter
-                    });
-                    _logger.InformationLog("User " + model.UserName + " not found", "Edit User", "The user Id do not correspond between model and user", GetCurrentUserAsync().Result.UserName);
-                    model.RolesList = roles;
-                    return View(nameof(EditUserView), model);
-                }
-                
-                if (user.UserName.ToUpper() == "ADMIN")
-                {
-                    if (model.IsDeleted)
-                    {
-                        _toastNotification.AddToastMessage("The user: " + model.UserName + " cannot be disabled", "", Enums.ToastType.Warning, new ToastOption()
-                        {
-                            PositionClass = ToastPositions.TopCenter
-                        });
-                        _logger.InformationLog("User " + model.UserName + " cannot be disabled", "Edit User", "tried to disable ADMIN user account", GetCurrentUserAsync().Result.UserName);
-                        model.RolesList = roles;
-                        return View(nameof(EditUserView), model);
-                    }
-                    if (model.UserName.ToUpper() != "ADMIN")
-                    {
-                        _toastNotification.AddToastMessage("The user: " + model.UserName + " cannot be disabled", "", Enums.ToastType.Warning, new ToastOption()
-                        {
-                            PositionClass = ToastPositions.TopCenter
-                        });
-                        _logger.InformationLog("User " + model.UserName + " name cannot be changed", "Edit User", "tried to change ADMIN user account name", GetCurrentUserAsync().Result.UserName);
-                        model.RolesList = roles;
-                        return View(nameof(EditUserView), model);
-                    }
-                }
-
-                user.Email = model.Email;
-                user.UserName = model.UserName;
-                user.IsDeleted = model.IsDeleted;
-
-
-                var res = await _userManager.UpdateAsync(user);
-                if (res.Succeeded)
-                {
-                    var rolesRemove = await  _userManager.GetRolesAsync(user);
-                    var resDel = await _userManager.RemoveFromRolesAsync(user, rolesRemove);
-                    if (resDel.Succeeded)
-                    {
-                        var resAdd = await _userManager.AddToRolesAsync(user, rolesAdd);
-                        if (resAdd.Succeeded)
-                        {
-                            if (model.IsLocked)
-                            {
-                                var resL = await _userManager.SetLockoutEndDateAsync(user, Convert.ToDateTime("3000-01-01"));
-                                if(resL.Succeeded)
-                                {
-                                    _toastNotification.AddToastMessage("User: " + model.UserName + " modified succesfully", "", Enums.ToastType.Success, new ToastOption()
-                                    {
-                                        PositionClass = ToastPositions.TopCenter,
-                                        PreventDuplicates = true
-                                    });
-                                    _logger.InformationLog("User " + user.UserName + " modified succesfully", "Edit User", string.Empty, GetCurrentUserAsync().Result.UserName);
-                                    _manageUser.CreateUserAddDefaultClaim(model.Id);
-                                    _manageUser.UpdateClaimValueForRole();
-                                    return RedirectToAction(nameof(ListActiveUsers));
-                                }
-                                else
-                                {
-                                    _toastNotification.AddToastMessage("Failed editing user " + model.UserName+ ", could not set lockout for user","", Enums.ToastType.Error, new ToastOption()
-                                    {
-                                        PositionClass = ToastPositions.TopCenter
-                                    });
-                                    ModelState.AddModelError(nameof(EditUserViewModel.IsLocked), AddErrorList(resL));
-                                    _logger.InformationLog("Failed editing user " + model.UserName + ", could not set lockout for user", "Edit User", AddErrorList(resL), GetCurrentUserAsync().Result.UserName);
-                                    model.RolesList = roles;
-                                    return View(nameof(EditUserView),model);
-                                }
-   
-                            }
-                            else
-                            {
-
-                                var resL = await _userManager.SetLockoutEndDateAsync(user, Convert.ToDateTime("1970-01-01"));
-                                if (resL.Succeeded)
-                                {
-                                    _toastNotification.AddToastMessage("User: " + model.UserName + " modified succesfully", "", Enums.ToastType.Success, new ToastOption()
-                                    {
-                                        PositionClass = ToastPositions.TopCenter,
-                                        PreventDuplicates = true
-                                    });
-                                    _logger.InformationLog("User " + user.UserName + " modified succesfully", "Edit User", "", GetCurrentUserAsync().Result.UserName);
-                                    _manageUser.CreateUserAddDefaultClaim(model.Id);
-                                    _manageUser.UpdateClaimValueForRole();
-                                    return RedirectToAction(nameof(ListActiveUsers));
-                                }
-                                else
-                                {
-                                    _toastNotification.AddToastMessage("Failed editing user " + model.UserName +", could not set lockout for user","", Enums.ToastType.Error, new ToastOption()
-                                    {
-                                        PositionClass = ToastPositions.TopCenter
-                                    });
-                                    _logger.InformationLog("Failed editing user " + model.UserName + ", could not set lockout for user", "Edit User", AddErrorList(resL), GetCurrentUserAsync().Result.UserName);
-                                    model.RolesList = roles;
-                                    return View(nameof(EditUserView), model);
-                                }
-                            }
-
-                        }
-                        else
-                        {
-                            _toastNotification.AddToastMessage("Failed editing user " + model.UserName+ ", could not update roles","", Enums.ToastType.Error, new ToastOption()
-                            {
-                                PositionClass = ToastPositions.TopCenter
-                            });
-                            _logger.InformationLog("Failed editing user " + model.UserName + ", could not update roles", "Edit User", AddErrorList(resAdd), GetCurrentUserAsync().Result.UserName);
-                            model.RolesList = roles;
-                            return View(nameof(EditUserView), model);
-                        }
-                    }
-                    else
-                    {
-                        _toastNotification.AddToastMessage("Failed editing user " + model.UserName+ ", could not update roles","", Enums.ToastType.Error, new ToastOption()
-                        {
-                            PositionClass = ToastPositions.TopCenter
-                        });
-                        _logger.InformationLog("Failed editing user " + model.UserName + ", could not update roles", "Edit User", AddErrorList(resDel), GetCurrentUserAsync().Result.UserName);
-                        model.RolesList = roles;
-                        return View(nameof(EditUserView), model);
-                    }
                 }
                 else
                 {
-                    _toastNotification.AddToastMessage("Failed editing user " + model.UserName + ", could not update roles", " ", Enums.ToastType.Success, new ToastOption()
+                    _toastNotification.AddSuccessToastMessage("User: " + model.UserName + " modified succesfully", new ToastrOptions()
                     {
-                        PositionClass = ToastPositions.TopCenter
+                        PositionClass = ToastPositions.TopCenter,
+                        PreventDuplicates = true
                     });
-                    _logger.InformationLog("Failed editing user " + model.UserName + ", could not update roles", "Edit User", AddErrorList(res), GetCurrentUserAsync().Result.UserName);
-                    _manageUser.CreateUserAddDefaultClaim(model.Id);
-                    _manageUser.UpdateClaimValueForRole();
-                    model.RolesList = roles;
-                    return View(nameof(EditUserView), model);
+                    _logger.InformationLog("User " + model.UserName + " modified succesfully", "Edit User", string.Empty, GetCurrentUserAsync().Result.UserName);
+                    return RedirectToAction(nameof(ListActiveUsers));
                 }
             }
             else
@@ -517,7 +336,7 @@ namespace Itsomax.Module.UserManagement.Controllers
             }
             catch(Exception ex)
             {
-                _toastNotification.AddToastMessage("An error ocurred: "+ex.Message, "", Enums.ToastType.Error, new ToastOption()
+                _toastNotification.AddErrorToastMessage("An error ocurred: "+ex.Message, new ToastrOptions()
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
@@ -541,7 +360,7 @@ namespace Itsomax.Module.UserManagement.Controllers
             var res = _userManager.ChangePasswordAsync(currentUser, model.CurrentPassword, model.NewPassword).Result;
             if(res.Succeeded)
             {
-                _toastNotification.AddToastMessage("Your password has been changed succesfully", "",Enums.ToastType.Success,new ToastOption()
+                _toastNotification.AddSuccessToastMessage("Your password has been changed succesfully",new ToastrOptions()
                 {
                     PositionClass=ToastPositions.TopCenter
                 });
@@ -550,7 +369,7 @@ namespace Itsomax.Module.UserManagement.Controllers
             }
             else
             {
-                _toastNotification.AddToastMessage("There was a problem changing your password", "", Enums.ToastType.Error,new ToastOption()
+                _toastNotification.AddErrorToastMessage("There was a problem changing your password",new ToastrOptions()
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
@@ -586,7 +405,7 @@ namespace Itsomax.Module.UserManagement.Controllers
         {
             if(model.NewPassword == string.Empty)
             {
-                _toastNotification.AddToastMessage("Your password has not been changed, please try a new one", "", Enums.ToastType.Warning, new ToastOption()
+                _toastNotification.AddWarningToastMessage("Your password has not been changed, please try a new one", new ToastrOptions()
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
@@ -601,7 +420,7 @@ namespace Itsomax.Module.UserManagement.Controllers
             var res =  await _userManager.ResetPasswordAsync(user,token,model.NewPassword);
             if (res.Succeeded)
             {
-                _toastNotification.AddToastMessage("Password for user " + user.UserName + " changed succesfully", "", Enums.ToastType.Success, new ToastOption()
+                _toastNotification.AddSuccessToastMessage("Password for user " + user.UserName + " changed succesfully", new ToastrOptions()
                 {
                     PositionClass = ToastPositions.TopCenter
                 });

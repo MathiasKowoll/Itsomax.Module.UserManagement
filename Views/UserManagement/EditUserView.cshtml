@@ -1,4 +1,3 @@
-@using Itsomax.Module.UserCore.ViewModels
 @model EditUserViewModel
 
 <div class="container-fluid">
@@ -22,35 +21,36 @@
                             @if (Model.UserName.ToUpper() == "ADMIN")
                             {
                                 <div class="form-group row align-items-center">
-                                    <label for="username2" class="col-sm-2 text-right control-label " asp-for="UserName"></label>
+                                    <label class="col-sm-2 text-right control-label ">Username</label>
                                     <div class="col-sm-4">
                                         <div class="input-group">
                                             <div class="input-group-prepend">
 
                                             </div>
                                             <p class="form-control-static">@Model.UserName</p>
+                                            <input type="hidden" asp-for="UserName" class="form-control" id="username2" placeholder="Username" />
                                         </div>
                                     </div>
                                 </div>
-
-                            }else
+                            }
+                            else
                             {
-                            <div class="form-group row align-items-center">
-                                <label for="username2" class="col-sm-2 text-right control-label " asp-for="UserName"></label>
-                                <div class="col-sm-4">
-                                    <div class="input-group">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text" id="basic-addon1">
-                                                <i class="ti-user"></i>
-                                            </span>
+                                <div class="form-group row align-items-center">
+                                    <label for="username2" class="col-sm-2 text-right control-label " asp-for="UserName"></label>
+                                    <div class="col-sm-4">
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text" id="basic-addon1">
+                                                    <i class="ti-user"></i>
+                                                </span>
+                                            </div>
+                                            <input asp-for="UserName" class="form-control" id="username2" placeholder="Username" />
                                         </div>
-                                        <input asp-for="UserName" class="form-control" id="username2" placeholder="Username" />
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <span asp-validation-for="UserName" class="text-danger"></span>
                                     </div>
                                 </div>
-                                <div class="col-sm-6">
-                                    <span asp-validation-for="UserName" class="text-danger"></span>
-                                </div>
-                            </div>
                             }
                             <div class="form-group row align-items-center">
                                 <label for="email" class="col-sm-2 text-right control-label " asp-for="Email"></label>
@@ -107,20 +107,20 @@
                             <div class="form-group row align-items-center">
                                 <div class="col-md-10 ml-md-auto">
                                     @foreach (var item in Model.RolesList)
-            {
-                        <div class="checkbox checkbox-info">
-                            <input id="@item.Value" type="checkbox" name="rolesAdd" value="@item.Value" checked="@item.Selected">
-                            <label for="@item.Value">@item.Value</label>
-                        </div>
-}
+                                    {
+                                        <div class="checkbox checkbox-info">
+                                            <input id="@item.Value" type="checkbox" name="rolesAdd" value="@item.Value" checked="@item.Selected">
+                                            <label for="@item.Value">@item.Value</label>
+                                        </div>
+                                    }
                                 </div>
                             </div>
                             <h3 class="box-title">Save edited user</h3>
                             <hr class="m-t-0 m-b-40">
                             <div class="form-group row">
                                 <div class="col-md-10 ml-md-auto">
-                                    <a asp-controller="UserManagement" asp-action="ListActiveUsers" class="btn btn-info waves-effect waves-light">Cancel</a>
                                     <button type="submit" class="btn btn-info waves-effect waves-light"><i class="fa fa-check"></i> Save</button>
+                                    <a asp-controller="UserManagement" asp-action="ListActiveUsers" class="btn btn-info waves-effect waves-light">Cancel</a>
                                 </div>
                             </div>
                         </div>

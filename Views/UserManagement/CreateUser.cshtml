@@ -85,20 +85,20 @@
                       <div class="form-group row align-items-center">
                           <div class="col-md-10 ml-md-auto">
                               @foreach (var item in Model.RolesList)
-            {
-                  <div class="checkbox checkbox-info">
-                      <input id="@item.Value" type="checkbox" name="SelectedRoles" value="@item.Value">
-                      <label for="@item.Value">@item.Value</label>
-                  </div>
-}
+                                {
+                                      <div class="checkbox checkbox-info">
+                                          <input id="@item.Value" type="checkbox" name="SelectedRoles" value="@item.Value">
+                                          <label for="@item.Value">@item.Value</label>
+                                      </div>
+                               }
                           </div>
                       </div>
                       <h3 class="box-title">Save new user</h3>
                       <hr class="m-t-0 m-b-40">
                       <div class="form-group row">
                           <div class="col-md-10 ml-md-auto">
-                              <a asp-controller="UserManagement" asp-action="ListActiveUsers" class="btn btn-info waves-effect waves-light">Cancel</a>
                               <button type="submit" class="btn btn-info waves-effect waves-light"><i class="fa fa-check"></i> Save</button>
+                              <a asp-controller="UserManagement" asp-action="ListActiveUsers" class="btn btn-info waves-effect waves-light">Cancel</a>
                           </div>
                       </div>
                   </form>
