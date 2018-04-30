@@ -205,7 +205,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                 {
                     try
                     {
-                        if(user.IsDeleted == true)
+                        if(user.IsDeleted)
                         {
                             user.IsDeleted = false;
                             var res = await _userManager.UpdateAsync(user);
