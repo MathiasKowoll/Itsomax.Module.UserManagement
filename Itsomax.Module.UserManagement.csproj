@@ -9,11 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Update="Microsoft.NETCore.App" Version="2.1.0-preview2-26406-04" />
+    <PackageReference Update="Microsoft.NETCore.App" Version="2.1.0-rc1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Itsomax.Module.UserCore\Itsomax.Module.UserCore.csproj" />
   </ItemGroup>
-
 </Project>
