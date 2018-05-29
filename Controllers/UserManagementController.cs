@@ -303,7 +303,6 @@ namespace Itsomax.Module.UserManagement.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         [AllowAnonymous]
         public async Task<IActionResult> LogOff()
         {

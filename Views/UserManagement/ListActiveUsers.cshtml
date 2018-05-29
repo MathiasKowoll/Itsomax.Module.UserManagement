@@ -77,7 +77,7 @@
                     {
                         text: 'Enable/Disable',
                         action: function (e, dt, node, config) {
-                            var rowData = dt.row({ selected: true }).data()
+                            var rowData = dt.row({ selected: true }).data();
 
                             if (rowData == null) {
                                 $.alert({
@@ -93,14 +93,14 @@
                                 else
             {
                 var title = '';
-                var content = ''
+                var content = '';
                 if (rowData.isDeleted == true) {
-                    titleConfirm = 'Enable User'
-                    contentConfirm = 'enable'
+                    titleConfirm = 'Enable User';
+                    contentConfirm = 'enable';
                 }
                 else {
-                    titleConfirm = 'Disable user'
-                    contentConfirm = 'disable'
+                    titleConfirm = 'Disable user';
+                    contentConfirm = 'disable';
                 }
                 $.confirm({
                     title: titleConfirm,
@@ -132,7 +132,7 @@
             {
                 text: 'Edit',
                 action: function (e, dt, node, config) {
-                    var rowData = dt.row({ selected: true }).data()
+                    var rowData = dt.row({ selected: true }).data();
                     if (rowData == null) {
                         $.alert({
                             title: 'No user selected!',
@@ -140,7 +140,7 @@
                         });
                     }
                     else {
-                        window.location.href = '/get/user/' + rowData.id
+                        window.location.href = '/get/user/' + rowData.id;
                         //'/get/user/'+rowData.id
                     }
                 },
@@ -149,7 +149,7 @@
             {
                 text: 'Delete',
                 action: function (e, dt, node, config) {
-                    var rowData = dt.row({ selected: true }).data()
+                    var rowData = dt.row({ selected: true }).data();
                     if (rowData == null) {
                         $.alert({
                             title: 'No user selected!',

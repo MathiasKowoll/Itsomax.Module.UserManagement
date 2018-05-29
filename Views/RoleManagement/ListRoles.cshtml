@@ -56,7 +56,7 @@
                             {
                                 text: 'Delete',
                                 action: function (e, dt, node, config) {
-                                    var rowData= dt.row( { selected: true } ).data()
+                                    var rowData = dt.row({ selected: true }).data();
 
                                     if(rowData == null)
                                     {
@@ -97,7 +97,7 @@
                             {
                                 text: 'Edit',
                                 action: function (e, dt, node, config) {
-                                    var rowData= dt.row( { selected: true } ).data()
+                                    var rowData = dt.row({ selected: true }).data();
                                     if(rowData == null)
                                     {
                                         $.alert({
@@ -105,9 +105,8 @@
                                             content: 'No user has been selected, to continue please select a role.'
                                         });
                                     }
-                                    else
-                                    {
-                                    window.location.href = '/get/role/'+rowData.id
+                                    else {
+                                        window.location.href = '/get/role/' + rowData.id;
                                     }
                                 },
                                 enabled: false
