@@ -13,7 +13,7 @@
                                 <th>Id</th>
                                 <th>UserName</th>
                                 <th>Email</th>
-                                <th>Is Disabled</th>
+                                <th>Active</th>
                                 <th>Updated</th>
                             </tr>
                         </thead>
@@ -43,7 +43,7 @@
                     {
                         "data": "isDeleted",
                         "render": function (data, type, row, meta) {
-                            if (data == false) {
+                            if (data == true) {
                                 var html = '<i class="mdi mdi-close"></i>';
                                 return html;
                             }
@@ -94,7 +94,7 @@
             {
                 var title = '';
                 var content = '';
-                if (rowData.isDeleted == true) {
+                if (rowData.isDeleted == false) {
                     titleConfirm = 'Enable User';
                     contentConfirm = 'enable';
                 }
