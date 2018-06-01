@@ -14,6 +14,7 @@
                                 <th>UserName</th>
                                 <th>Email</th>
                                 <th>Active</th>
+                                <th>Locked</th>
                                 <th>Updated</th>
                             </tr>
                         </thead>
@@ -55,6 +56,22 @@
 
                         }
                     },
+                    {
+                    
+                        "data": "isLocked",
+                        "render": function (data, type, row, meta) {
+                        if (data == false) {
+                            var html = '<i class="mdi mdi-close"></i>';
+                            return html;
+                        }
+                        else {
+                            var html = '<i class="mdi mdi-check"></i>';
+                            return html;
+                        }
+
+
+                    }
+                },
                     { "data": "updated" }
                 ],
                 paging: true,
@@ -128,7 +145,7 @@
             }
         },
             enabled: false
-                                },
+        },
             {
                 text: 'Edit',
                 action: function (e, dt, node, config) {
@@ -160,7 +177,7 @@
             toastr.error('', 'You cannot delete yourself', { positionClass: 'toast-top-center' });
             table.ajax.reload;
         }
-                                        else
+        else
         {
             if (rowData.isDeleted == false) {
                 toastr.error('', 'User must be disabled to be able to delete it', { positionClass: 'toast-top-center' });
@@ -192,23 +209,80 @@
                 });
             }
         }
-                                    },
+        },
         enabled: false
 
+         },
+         {
+                        text: 'Lock/Unlock',
+                        action: function (e, dt, node, config) {
+                            var rowData = dt.row({ selected: true }).data();
+
+                            if (rowData == null) {
+                                $.alert({
+                                    title: 'No user selected!',
+                                    content: 'No user has been selected, to continue please select a user.'
+                                });
+                            }
+                            if (@ViewBag.UserId == rowData.id)
+            {
+                toastr.error('', 'You cannot lock yourself', { positionClass: 'toast-top-center' });
+                table.ajax.reload;
+            }
+                                else
+            {
+                var title = '';
+                var content = '';
+                if (rowData.isLocked == false) {
+                    titleConfirm = 'Lock User';
+                    contentConfirm = 'lock';
+                }
+                else {
+                    titleConfirm = 'Unlock user';
+                    contentConfirm = 'unlock';
+                }
+                $.confirm({
+                    title: titleConfirm,
+                    content: 'Are you sure do you want to ' + contentConfirm + ' user: ' + rowData.userName + '?',
+                    buttons: {
+                        confirm: function () {
+                            $.ajax({
+                                url: '/UserManagement/LockUserPostView/' + rowData.id,
+                                type: 'DELETE',
+                                success: function (obj) {
+                                    toastr.success('', 'User: ' + rowData.userName + ' ' + contentConfirm + ' succesfully', { positionClass: 'toast-top-center' });
+                                    table.ajax.reload();
+                                },
+                                error: function (obj) {
+                                    table.ajax.reload();
+                                    toastr.error('', 'User: ' + rowData.userName + ' could not be locked/unlocked', { positionClass: 'toast-top-center' });
                                 }
-                            ]
-                        });
+                            });
+                        },
+                        cancel: function () {
+                            table.ajax.reload();
+                        }
+                    }
+                });
+            }
+        },
+            enabled: false
+        }
+     ]
+    });
         table.on('select', function () {
             var selectedRows = table.rows({ selected: true }).count();
             table.button(0).enable(selectedRows == 1);
             table.button(1).enable(selectedRows == 1);
             table.button(2).enable(selectedRows == 1);
+            table.button(3).enable(selectedRows == 1);
         });
         table.on('deselect', function () {
             //var unselectedRows = table.rows( {selected: false} ).count();
             table.button(0).disable();
             table.button(1).disable();
             table.button(2).disable();
+            table.button(3).disable();
         });
 
 

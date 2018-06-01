@@ -191,38 +191,32 @@ namespace Itsomax.Module.UserManagement.Controllers
         {
             if (ModelState.IsValid)
             {
-                var res = _manageUser.EditRole(model, selectedModules).Result;
+                var res = _manageUser.EditRole(model,GetCurrentUserAsync().Result.UserName, selectedModules).Result;
                 if (res.Succeeded)
                 {
-                    _toastNotification.AddSuccessToastMessage("Role: " + model.RoleName + " edited succesfully", new ToastrOptions()
+                    _toastNotification.AddSuccessToastMessage(res.OkMessage, new ToastrOptions()
                     {
                         PositionClass = ToastPositions.TopCenter
                     });
-                    _logger.InformationLog("Role " + model.RoleName + " edited succesfully", "Edit Role", string.Empty, GetCurrentUserAsync().Result.UserName);
                     return RedirectToAction("ListRoles");
                 }
                 else
                 {
-                    _toastNotification.AddErrorToastMessage("Could not edit role: " + model.RoleName, new ToastrOptions()
+                    _toastNotification.AddErrorToastMessage(res.Errors, new ToastrOptions()
                     {
                         PositionClass = ToastPositions.TopCenter
                     });
-                    _logger.InformationLog("Role " + model.RoleName + " not edited succesfully", "Edit Role", string.Empty, GetCurrentUserAsync().Result.UserName);
                     return View(nameof(EditRoleView),model);
                 }
 
                
             }
-            else
+            _toastNotification.AddErrorToastMessage("Could not edit role: " + model.RoleName, new ToastrOptions()
             {
-                _toastNotification.AddErrorToastMessage("Could not edit role: " + model.RoleName, new ToastrOptions()
-                {
-                    PositionClass = ToastPositions.TopCenter
-                });
-                _logger.InformationLog("Role " + model.RoleName + " not edited succesfully", "Edit Role", string.Empty, GetCurrentUserAsync().Result.UserName);
-                return View(nameof(EditRoleView),model);
-            }
-            
+                PositionClass = ToastPositions.TopCenter
+            });
+            return View(nameof(EditRoleView),model);
+
         }
 
         [HttpDelete]
@@ -232,21 +226,17 @@ namespace Itsomax.Module.UserManagement.Controllers
             {
                 return Json(false);
             }
-            else
+
+            var role = await _roleManager.FindByIdAsync(id.Value.ToString());
+            var res = await _roleManager.DeleteAsync(role);
+            if (res.Succeeded)
             {
-                var role = await _roleManager.FindByIdAsync(id.Value.ToString());
-                var res = await _roleManager.DeleteAsync(role);
-                if (res.Succeeded)
-                {
-                    _logger.InformationLog("Role " + role.Name + " deleted succesfully", "Delete Role", string.Empty, GetCurrentUserAsync().Result.UserName);
-                    return Json(true);
-                }
-                else
-                {
-                    _logger.InformationLog("Role " + role.Name + " not deleted succesfully", "Delete Role", AddErrorList(res), GetCurrentUserAsync().Result.UserName);
-                    return Json(false);
-                }
+                _logger.InformationLog("Role " + role.Name + " deleted succesfully", "Delete Role", string.Empty, GetCurrentUserAsync().Result.UserName);
+                return Json(true);
             }
+
+            _logger.InformationLog("Role " + role.Name + " not deleted succesfully", "Delete Role", AddErrorList(res), GetCurrentUserAsync().Result.UserName);
+            return Json(false);
         }
 
         #region Helpers

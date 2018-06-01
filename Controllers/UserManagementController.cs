@@ -62,28 +62,23 @@ namespace Itsomax.Module.UserManagement.Controllers
             if (ModelState.IsValid)
             {
 
-                var res = await _manageUser.CreateUserAsync(model, selectedRoles);
+                var res = await _manageUser.CreateUserAsync(model,GetCurrentUserAsync().Result.UserName ,selectedRoles);
                 if (res.Succeeded)
                 {
-                    _toastNotification.AddSuccessToastMessage("User: " + model.UserName + " create succesfully", new ToastrOptions()
+                    _toastNotification.AddSuccessToastMessage(res.OkMessage, new ToastrOptions()
                     {
                         PositionClass = ToastPositions.TopCenter
                     });
-                    _logger.InformationLog("User "+model.UserName+" has been created succesfully", "Create user", string.Empty, GetCurrentUserAsync().Result.UserName);
                     return RedirectToAction("ListActiveUsers");
                 }
-                else
+                _toastNotification.AddErrorToastMessage(res.Errors, new ToastrOptions()
                 {
-                    _logger.InformationLog(res.Errors, "Create user", "", GetCurrentUserAsync().Result.UserName);
-                    _toastNotification.AddErrorToastMessage(res.Errors, new ToastrOptions()
-                    {
-                        PositionClass = ToastPositions.TopCenter
-                    });
-                    return View(nameof(CreateUser),model);
-                }
-            }
-            else
+                    PositionClass = ToastPositions.TopCenter
+                });
                 return View(nameof(CreateUser),model);
+
+            }
+            return View(nameof(CreateUser),model);
         }
 
         [HttpGet]
@@ -107,7 +102,6 @@ namespace Itsomax.Module.UserManagement.Controllers
             if (res.Succeeded)
             {
                 HttpContext.Session.SetString("SessionId",model.UserName.ToUpper());
-                _logger.InformationLog("User: "+model.UserName+" succesful login","Login",res.ToString(),model.UserName);
                 return RedirectToLocal(returnUrl);
             }
             else
@@ -117,7 +111,6 @@ namespace Itsomax.Module.UserManagement.Controllers
                     PositionClass = ToastPositions.TopCenter,
                     
                 });
-                _logger.InformationLog(res.Errors,"Login",string.Empty,model.UserName);
                 return View(model);
             }
         }
@@ -154,33 +147,26 @@ namespace Itsomax.Module.UserManagement.Controllers
             var roles = _manageUser.GetUserRolesToSelectListItem(model.Id);
             if (ModelState.IsValid)
             {
-                var res = await _manageUser.EditUserAsync(model, rolesAdd);
+                var res = await _manageUser.EditUserAsync(model,GetCurrentUserAsync().Result.UserName, rolesAdd);
                 if (!res.Succeeded)
                 {
                     _toastNotification.AddErrorToastMessage(res.Errors, new ToastrOptions()
                     {
                         PositionClass = ToastPositions.TopCenter
                     });
-                    _logger.InformationLog(res.Errors, "Edit User", string.Empty,GetCurrentUserAsync().Result.UserName);
                     model.RolesList = roles;
                     return View(nameof(EditUserView), model);
                 }
-                else
+
+                _toastNotification.AddSuccessToastMessage(res.OkMessage, new ToastrOptions()
                 {
-                    _toastNotification.AddSuccessToastMessage("User: " + model.UserName + " modified succesfully", new ToastrOptions()
-                    {
-                        PositionClass = ToastPositions.TopCenter,
-                        PreventDuplicates = true
-                    });
-                    _logger.InformationLog("User " + model.UserName + " modified succesfully", "Edit User", string.Empty, GetCurrentUserAsync().Result.UserName);
-                    return RedirectToAction(nameof(ListActiveUsers));
-                }
+                    PositionClass = ToastPositions.TopCenter,
+                    PreventDuplicates = true
+                });
+                return RedirectToAction(nameof(ListActiveUsers));
             }
-            else
-            {
-                model.RolesList = roles;
-                return View(nameof(EditUserView), model);
-            }
+            model.RolesList = roles;
+            return View(nameof(EditUserView), model);
         }
 
         [HttpDelete]
@@ -244,6 +230,76 @@ namespace Itsomax.Module.UserManagement.Controllers
                     catch (Exception ex)
                     {
                         var message = ex.Message;
+                        _logger.ErrorLog(ex.Message, "Disable User", ex.InnerException.Message, GetCurrentUserAsync().Result.UserName);
+                        return Json(false);
+                    }
+                }
+                else
+                {
+                    _logger.InformationLog("User " + user.UserName + " tried to disable himself", "Disable User", string.Empty, GetCurrentUserAsync().Result.UserName);
+                    return Json(false);
+                }
+
+
+            }
+        }
+        
+        [HttpDelete]
+        public async Task<IActionResult> LockUserPostView(long? id)
+        {
+            if(id == null)
+            {
+                return Json(false);
+            }
+            else
+            {
+                var user = await _userManager.FindByIdAsync(id.Value.ToString());
+                var locked = await _userManager.IsLockedOutAsync(user);
+                if(user == null)
+                {
+                    return Json(false);
+                }
+
+                var currentUser = GetCurrentUserAsync().Result;
+
+                if (user != currentUser)
+                {
+                    try
+                    {
+                        if(locked)
+                        {
+                            var time = Convert.ToDateTime("1970-01-01");
+                            var res = await _userManager.SetLockoutEndDateAsync(user, time);
+                            if (res.Succeeded)
+                            {
+                                _logger.InformationLog("User " + user.UserName + " unlocked succesful", "Lock User",string.Empty, GetCurrentUserAsync().Result.UserName);
+                                return Json(true);
+
+                            }
+
+                            _logger.InformationLog("User " + user.UserName + " not unlocked succesful", "Lock User", AddErrorList(res), GetCurrentUserAsync().Result.UserName);
+                            return Json(false);
+
+                        }
+                        else
+                        {
+                            var time = Convert.ToDateTime("3000-01-01");
+                            var res = await _userManager.SetLockoutEndDateAsync(user, time);
+                            if (res.Succeeded)
+                            {
+                                _logger.InformationLog("User " + user.UserName + " locked succesful", "Lock User", string.Empty, GetCurrentUserAsync().Result.UserName);
+                                return Json(true);
+
+                            }
+
+                            _logger.InformationLog("User " + user.UserName + " not locked succesful", "Lock User", AddErrorList(res), GetCurrentUserAsync().Result.UserName);
+                            return Json(false);
+                        }
+                        
+                    }
+
+                    catch (Exception ex)
+                    {
                         _logger.ErrorLog(ex.Message, "Disable User", ex.InnerException.Message, GetCurrentUserAsync().Result.UserName);
                         return Json(false);
                     }
@@ -330,6 +386,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                     Email = x.Email,
                     IsDeleted = x.IsDeleted,
                     Updated = x.UpdatedOn.DateTime,
+                    IsLocked = _userManager.IsLockedOutAsync(_userManager.FindByIdAsync(x.Id.ToString()).Result).Result
                 });
                 return Json(user);
             }
