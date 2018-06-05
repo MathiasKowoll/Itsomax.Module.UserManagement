@@ -103,48 +103,48 @@
                                 });
                             }
                             if (@ViewBag.UserId == rowData.id)
-            {
-                toastr.error('', 'You cannot disable yourself', { positionClass: 'toast-top-center' });
-                table.ajax.reload;
-            }
-                                else
-            {
-                var title = '';
-                var content = '';
-                if (rowData.isDeleted == false) {
-                    titleConfirm = 'Enable User';
-                    contentConfirm = 'enable';
-                }
-                else {
-                    titleConfirm = 'Disable user';
-                    contentConfirm = 'disable';
-                }
-                $.confirm({
-                    title: titleConfirm,
-                    content: 'Are you sure do you want to ' + contentConfirm + ' user: ' + rowData.userName + '?',
-                    buttons: {
-                        confirm: function () {
-                            $.ajax({
-                                url: '/UserManagement/DeleteUserPostView/' + rowData.id,
-                                type: 'DELETE',
-                                success: function (obj) {
-                                    toastr.success('', 'User: ' + rowData.userName + ' ' + contentConfirm + ' succesfully', { positionClass: 'toast-top-center' });
-                                    table.ajax.reload();
-                                },
-                                error: function (obj) {
-                                    table.ajax.reload();
-                                    toastr.error('', 'User: ' + rowData.userName + ' could not be enabled/disabled', { positionClass: 'toast-top-center' });
+                            {
+                                toastr.error('', 'You cannot disable yourself', { positionClass: 'toast-top-center' });
+                                table.ajax.reload;
+                            }
+                            else
+                            {
+                                var title = '';
+                                var content = '';
+                                if (rowData.isDeleted == false) {
+                                    titleConfirm = 'Enable User';
+                                    contentConfirm = 'enable';
                                 }
+                                else {
+                                    titleConfirm = 'Disable user';
+                                    contentConfirm = 'disable';
+                                }
+                                $.confirm({
+                                    title: titleConfirm,
+                                    content: 'Are you sure do you want to ' + contentConfirm + ' user: ' + rowData.userName + '?',
+                                    buttons: {
+                                        confirm: function () {
+                                            $.ajax({
+                                                url: '/UserManagement/DeleteUserPostView/' + rowData.id,
+                                                type: 'DELETE',
+                                                success: function (obj) {
+                                                    toastr.success('', 'User: ' + rowData.userName + ' ' + contentConfirm + ' succesfully', { positionClass: 'toast-top-center' });
+                                                    table.ajax.reload();
+                                                },
+                                                error: function (obj) {
+                                                    table.ajax.reload();
+                                                    toastr.error('', 'User: ' + rowData.userName + ' could not be enabled/disabled', { positionClass: 'toast-top-center' });
+                                                }
+                                            });
+                                        },
+                                        cancel: function () {
+                                            table.ajax.reload();
+                                        }
+                                    }
                             });
-                        },
-                        cancel: function () {
-                            table.ajax.reload();
                         }
-                    }
-                });
-            }
-        },
-            enabled: false
+                    },
+                        enabled: false
         },
             {
                 text: 'Edit',
