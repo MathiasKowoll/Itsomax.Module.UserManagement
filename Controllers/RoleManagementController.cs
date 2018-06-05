@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Itsomax.Module.Core.Models;
 using Itsomax.Data.Infrastructure.Data;
 using System.Linq;
+using Itsomax.Module.Core.Data;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Itsomax.Module.Core.Extensions.CommonHelpers;
 using NToastNotify;
@@ -22,7 +23,8 @@ namespace Itsomax.Module.UserManagement.Controllers
     {
         private readonly RoleManager<Role> _roleManager;
         private readonly UserManager<User> _userManager;
-        private readonly IRepository<ModuleRole> _modRoleRepository;
+        //private readonly IRepository<ModuleRole> _modRoleRepository;
+        private readonly ItsomaxDbContext _context;
         private readonly IRepository<SubModule> _subModule;
         private readonly IRepository<Role> _role;
         private readonly IManageUser _manageUser;
@@ -30,12 +32,13 @@ namespace Itsomax.Module.UserManagement.Controllers
         private readonly ILogginToDatabase _logger;
 
 
-        public RoleManagementController(RoleManager<Role> roleManager,IRepository<ModuleRole> modRoleRepository,
+        public RoleManagementController(RoleManager<Role> roleManager,ItsomaxDbContext context,/*IRepository<ModuleRole> modRoleRepository,*/
                                     IRepository<SubModule> subModule,IManageUser manageUser, IRepository<Role> role,
                                     IToastNotification toastNotification, ILogginToDatabase logger, UserManager<User> userManager)
         {
             _roleManager = roleManager;
-            _modRoleRepository = modRoleRepository;
+            _context = context;
+            //_modRoleRepository = modRoleRepository;
             _subModule = subModule;
             _manageUser = manageUser;
             _role = role;
@@ -96,10 +99,11 @@ namespace Itsomax.Module.UserManagement.Controllers
                                     RoleId = role.Id,
                                     SubModuleId = mod.Id
                                 };
-                                _modRoleRepository.Add(modrole);
+                                _context.Set<ModuleRole>().AddRange(modrole);
+                                //_modRoleRepository.Add(modrole);
                             }
 
-                            _modRoleRepository.SaveChanges();
+                            _context.SaveChanges();
                         }
                         _toastNotification.AddSuccessToastMessage("Role: " + model.RoleName + " created succesfully", new ToastrOptions()
                         {
