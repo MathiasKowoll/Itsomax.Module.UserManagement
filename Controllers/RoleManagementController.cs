@@ -23,22 +23,21 @@ namespace Itsomax.Module.UserManagement.Controllers
     {
         private readonly RoleManager<Role> _roleManager;
         private readonly UserManager<User> _userManager;
-        //private readonly IRepository<ModuleRole> _modRoleRepository;
         private readonly ItsomaxDbContext _context;
         private readonly IRepository<SubModule> _subModule;
         private readonly IRepository<Role> _role;
         private readonly IManageUser _manageUser;
-        private IToastNotification _toastNotification;
+        private readonly IToastNotification _toastNotification;
         private readonly ILogginToDatabase _logger;
 
 
-        public RoleManagementController(RoleManager<Role> roleManager,ItsomaxDbContext context,/*IRepository<ModuleRole> modRoleRepository,*/
+        public RoleManagementController(RoleManager<Role> roleManager,ItsomaxDbContext context,
                                     IRepository<SubModule> subModule,IManageUser manageUser, IRepository<Role> role,
-                                    IToastNotification toastNotification, ILogginToDatabase logger, UserManager<User> userManager)
+                                    IToastNotification toastNotification, ILogginToDatabase logger, 
+            UserManager<User> userManager)
         {
             _roleManager = roleManager;
             _context = context;
-            //_modRoleRepository = modRoleRepository;
             _subModule = subModule;
             _manageUser = manageUser;
             _role = role;
@@ -62,11 +61,12 @@ namespace Itsomax.Module.UserManagement.Controllers
             }
             catch(Exception ex)
             {
-                _toastNotification.AddSuccessToastMessage("Error ocurrerd: "+ex, new ToastrOptions()
+                _toastNotification.AddSuccessToastMessage("Error ocurrerd: "+ex, new ToastrOptions
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
-                _logger.ErrorLog(ex.Message, "Create Role", ex.InnerException.Message, GetCurrentUserAsync().Result.UserName);
+                _logger.ErrorLog(ex.Message, "Create Role", ex.InnerException.Message,
+                    GetCurrentUserAsync().Result.UserName);
                 return RedirectToAction("ListRoles");
             }
             
@@ -100,36 +100,41 @@ namespace Itsomax.Module.UserManagement.Controllers
                                     SubModuleId = mod.Id
                                 };
                                 _context.Set<ModuleRole>().AddRange(modrole);
-                                //_modRoleRepository.Add(modrole);
                             }
 
                             _context.SaveChanges();
                         }
-                        _toastNotification.AddSuccessToastMessage("Role: " + model.RoleName + " created succesfully", new ToastrOptions()
+                        _toastNotification.AddSuccessToastMessage("Role: " + model.RoleName + " created succesfully", 
+                            new ToastrOptions
                         {
                             PositionClass = ToastPositions.TopCenter
                         });
-                        _logger.InformationLog("Role" + role.Name + " created succesfully", "Create Role", string.Empty, GetCurrentUserAsync().Result.UserName);
+                        _logger.InformationLog("Role" + role.Name + " created succesfully", "Create Role", string.Empty,
+                            GetCurrentUserAsync().Result.UserName);
                         return RedirectToAction("ListRoles");
                     }
                     catch (Exception ex)
                     {
-                        _toastNotification.AddErrorToastMessage("Could not create role: " + model.RoleName, new ToastrOptions()
+                        _toastNotification.AddErrorToastMessage("Could not create role: " + model.RoleName, 
+                            new ToastrOptions
                         {
                             PositionClass = ToastPositions.TopCenter
                         });
-                        _logger.InformationLog(ex.Message, "Create Role", ex.InnerException.Message, GetCurrentUserAsync().Result.UserName);
+                        _logger.InformationLog(ex.Message, "Create Role", ex.InnerException.Message,
+                            GetCurrentUserAsync().Result.UserName);
                         return View(nameof(CreateRole), model);
                     }
 
                 }
                 else
                 {
-                    _toastNotification.AddErrorToastMessage("Could not create role: " + model.RoleName, new ToastrOptions()
+                    _toastNotification.AddErrorToastMessage("Could not create role: " + model.RoleName, 
+                        new ToastrOptions
                     {
                         PositionClass = ToastPositions.TopCenter
                     });
-                    _logger.InformationLog("Could not create role: " + model.RoleName, "Create Role", string.Empty, GetCurrentUserAsync().Result.UserName);
+                    _logger.InformationLog("Could not create role: " + model.RoleName, "Create Role", string.Empty,
+                        GetCurrentUserAsync().Result.UserName);
                     return View(nameof(CreateRole), model);
                 }
             }
@@ -154,11 +159,12 @@ namespace Itsomax.Module.UserManagement.Controllers
             }
             catch(Exception ex)
             {
-                _toastNotification.AddErrorToastMessage("An error ocurred", new ToastrOptions()
+                _toastNotification.AddErrorToastMessage("An error ocurred", new ToastrOptions
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
-                _logger.InformationLog(ex.Message, "ListRolesView", ex.InnerException.Message, GetCurrentUserAsync().Result.UserName);
+                _logger.InformationLog(ex.Message, "ListRolesView", ex.InnerException.Message,
+                    GetCurrentUserAsync().Result.UserName);
                 return Json(false);
             }
             
@@ -215,7 +221,7 @@ namespace Itsomax.Module.UserManagement.Controllers
 
                
             }
-            _toastNotification.AddErrorToastMessage("Could not edit role: " + model.RoleName, new ToastrOptions()
+            _toastNotification.AddErrorToastMessage("Could not edit role: " + model.RoleName, new ToastrOptions
             {
                 PositionClass = ToastPositions.TopCenter
             });
@@ -235,11 +241,13 @@ namespace Itsomax.Module.UserManagement.Controllers
             var res = await _roleManager.DeleteAsync(role);
             if (res.Succeeded)
             {
-                _logger.InformationLog("Role " + role.Name + " deleted succesfully", "Delete Role", string.Empty, GetCurrentUserAsync().Result.UserName);
+                _logger.InformationLog("Role " + role.Name + " deleted succesfully", "Delete Role", string.Empty,
+                    GetCurrentUserAsync().Result.UserName);
                 return Json(true);
             }
 
-            _logger.InformationLog("Role " + role.Name + " not deleted succesfully", "Delete Role", AddErrorList(res), GetCurrentUserAsync().Result.UserName);
+            _logger.InformationLog("Role " + role.Name + " not deleted succesfully", "Delete Role", AddErrorList(res),
+                GetCurrentUserAsync().Result.UserName);
             return Json(false);
         }
 

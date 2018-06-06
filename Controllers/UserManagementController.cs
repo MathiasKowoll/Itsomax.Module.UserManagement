@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Itsomax.Module.Core.Models;
-using Itsomax.Data.Infrastructure.Data;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
@@ -23,23 +22,19 @@ namespace Itsomax.Module.UserManagement.Controllers
         private readonly SignInManager<User> _signIn;
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<Role> _roleManager;
-        //private readonly ICreateMenu _createMenu;
-        //private readonly IRepository<AppSetting> _appSettings;
         private readonly IToastNotification _toastNotification;
         private readonly ILogginToDatabase _logger;
 
-        public UserManagementController(IManageUser manageUser,ICreateMenu createMenu,SignInManager<User> signIn,UserManager<User> user,
-        RoleManager<Role> roleManage, IToastNotification toastNotification,
-        ILogginToDatabase logger, IRepository<AppSetting> appSettings)
+        public UserManagementController(IManageUser manageUser,ICreateMenu createMenu,SignInManager<User> 
+                signIn,UserManager<User> user,RoleManager<Role> roleManage, IToastNotification toastNotification,
+        ILogginToDatabase logger)
         {
             _manageUser=manageUser;
-            //_createMenu = createMenu;
             _signIn = signIn;
             _userManager = user;
             _roleManager = roleManage;
             _toastNotification = toastNotification;
             _logger = logger;
-            //_appSettings = appSettings;
         }
         //[CheckSessionOut]
         public IActionResult CreateUser()
@@ -65,13 +60,13 @@ namespace Itsomax.Module.UserManagement.Controllers
                 var res = await _manageUser.CreateUserAsync(model,GetCurrentUserAsync().Result.UserName ,selectedRoles);
                 if (res.Succeeded)
                 {
-                    _toastNotification.AddSuccessToastMessage(res.OkMessage, new ToastrOptions()
+                    _toastNotification.AddSuccessToastMessage(res.OkMessage, new ToastrOptions
                     {
                         PositionClass = ToastPositions.TopCenter
                     });
                     return RedirectToAction("ListActiveUsers");
                 }
-                _toastNotification.AddErrorToastMessage(res.Errors, new ToastrOptions()
+                _toastNotification.AddErrorToastMessage(res.Errors, new ToastrOptions
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
@@ -104,15 +99,14 @@ namespace Itsomax.Module.UserManagement.Controllers
                 HttpContext.Session.SetString("SessionId",model.UserName.ToUpper());
                 return RedirectToLocal(returnUrl);
             }
-            else
-            {
-                _toastNotification.AddWarningToastMessage("Invalid user or password, please try again", new ToastrOptions()
+
+            _toastNotification.AddWarningToastMessage("Invalid user or password, please try again",
+                new ToastrOptions
                 {
                     PositionClass = ToastPositions.TopCenter,
                     
                 });
-                return View(model);
-            }
+            return View(model);
         }
         [HttpGet("/get/user/{Id}")]
         public async Task<IActionResult> EditUserView(long? id)
@@ -150,7 +144,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                 var res = await _manageUser.EditUserAsync(model,GetCurrentUserAsync().Result.UserName, rolesAdd);
                 if (!res.Succeeded)
                 {
-                    _toastNotification.AddErrorToastMessage(res.Errors, new ToastrOptions()
+                    _toastNotification.AddErrorToastMessage(res.Errors, new ToastrOptions
                     {
                         PositionClass = ToastPositions.TopCenter
                     });
@@ -158,7 +152,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                     return View(nameof(EditUserView), model);
                 }
 
-                _toastNotification.AddSuccessToastMessage(res.OkMessage, new ToastrOptions()
+                _toastNotification.AddSuccessToastMessage(res.OkMessage, new ToastrOptions
                 {
                     PositionClass = ToastPositions.TopCenter,
                     PreventDuplicates = true
@@ -197,13 +191,15 @@ namespace Itsomax.Module.UserManagement.Controllers
                             var res = await _userManager.UpdateAsync(user);
                             if (res.Succeeded)
                             {
-                                _logger.InformationLog("User " + user.UserName + " disabled succesful", "Disable User",string.Empty, GetCurrentUserAsync().Result.UserName);
+                                _logger.InformationLog("User " + user.UserName + " disabled succesful", "Disable User",
+                                    string.Empty, GetCurrentUserAsync().Result.UserName);
                                 return Json(true);
 
                             }
                             else
                             {
-                                _logger.InformationLog("User " + user.UserName + " not disabled succesful", "Disable User", AddErrorList(res), GetCurrentUserAsync().Result.UserName);
+                                _logger.InformationLog("User " + user.UserName + " not disabled succesful",
+                                    "Disable User", AddErrorList(res), GetCurrentUserAsync().Result.UserName);
                                 return Json(false);
                             }
 
@@ -214,13 +210,15 @@ namespace Itsomax.Module.UserManagement.Controllers
                             var res = await _userManager.UpdateAsync(user);
                             if (res.Succeeded)
                             {
-                                _logger.InformationLog("User " + user.UserName + " enabled succesful", "Disable User", string.Empty, GetCurrentUserAsync().Result.UserName);
+                                _logger.InformationLog("User " + user.UserName + " enabled succesful", "Disable User",
+                                    string.Empty, GetCurrentUserAsync().Result.UserName);
                                 return Json(true);
 
                             }
                             else
                             {
-                                _logger.InformationLog("User " + user.UserName + " not enabled succesful", "Disable User", AddErrorList(res), GetCurrentUserAsync().Result.UserName);
+                                _logger.InformationLog("User " + user.UserName + " not enabled succesful",
+                                    "Disable User", AddErrorList(res), GetCurrentUserAsync().Result.UserName);
                                 return Json(false);
                             }
                         }
@@ -230,13 +228,15 @@ namespace Itsomax.Module.UserManagement.Controllers
                     catch (Exception ex)
                     {
                         var message = ex.Message;
-                        _logger.ErrorLog(ex.Message, "Disable User", ex.InnerException.Message, GetCurrentUserAsync().Result.UserName);
+                        _logger.ErrorLog(ex.Message, "Disable User", ex.InnerException.Message,
+                            GetCurrentUserAsync().Result.UserName);
                         return Json(false);
                     }
                 }
                 else
                 {
-                    _logger.InformationLog("User " + user.UserName + " tried to disable himself", "Disable User", string.Empty, GetCurrentUserAsync().Result.UserName);
+                    _logger.InformationLog("User " + user.UserName + " tried to disable himself", "Disable User",
+                        string.Empty, GetCurrentUserAsync().Result.UserName);
                     return Json(false);
                 }
 
@@ -272,12 +272,14 @@ namespace Itsomax.Module.UserManagement.Controllers
                             var res = await _userManager.SetLockoutEndDateAsync(user, time);
                             if (res.Succeeded)
                             {
-                                _logger.InformationLog("User " + user.UserName + " unlocked succesful", "Lock User",string.Empty, GetCurrentUserAsync().Result.UserName);
+                                _logger.InformationLog("User " + user.UserName + " unlocked succesful", "Lock User",
+                                    string.Empty, GetCurrentUserAsync().Result.UserName);
                                 return Json(true);
 
                             }
 
-                            _logger.InformationLog("User " + user.UserName + " not unlocked succesful", "Lock User", AddErrorList(res), GetCurrentUserAsync().Result.UserName);
+                            _logger.InformationLog("User " + user.UserName + " not unlocked succesful", "Lock User",
+                                AddErrorList(res), GetCurrentUserAsync().Result.UserName);
                             return Json(false);
 
                         }
@@ -287,12 +289,14 @@ namespace Itsomax.Module.UserManagement.Controllers
                             var res = await _userManager.SetLockoutEndDateAsync(user, time);
                             if (res.Succeeded)
                             {
-                                _logger.InformationLog("User " + user.UserName + " locked succesful", "Lock User", string.Empty, GetCurrentUserAsync().Result.UserName);
+                                _logger.InformationLog("User " + user.UserName + " locked succesful", "Lock User",
+                                    string.Empty, GetCurrentUserAsync().Result.UserName);
                                 return Json(true);
 
                             }
 
-                            _logger.InformationLog("User " + user.UserName + " not locked succesful", "Lock User", AddErrorList(res), GetCurrentUserAsync().Result.UserName);
+                            _logger.InformationLog("User " + user.UserName + " not locked succesful", "Lock User",
+                                AddErrorList(res), GetCurrentUserAsync().Result.UserName);
                             return Json(false);
                         }
                         
@@ -300,13 +304,15 @@ namespace Itsomax.Module.UserManagement.Controllers
 
                     catch (Exception ex)
                     {
-                        _logger.ErrorLog(ex.Message, "Disable User", ex.InnerException.Message, GetCurrentUserAsync().Result.UserName);
+                        _logger.ErrorLog(ex.Message, "Disable User", ex.InnerException.Message,
+                            GetCurrentUserAsync().Result.UserName);
                         return Json(false);
                     }
                 }
                 else
                 {
-                    _logger.InformationLog("User " + user.UserName + " tried to disable himself", "Disable User", string.Empty, GetCurrentUserAsync().Result.UserName);
+                    _logger.InformationLog("User " + user.UserName + " tried to disable himself", "Disable User",
+                        string.Empty, GetCurrentUserAsync().Result.UserName);
                     return Json(false);
                 }
 
@@ -327,7 +333,8 @@ namespace Itsomax.Module.UserManagement.Controllers
                 var user = await _userManager.FindByIdAsync(id.ToString());
                 if(user == null)
                 {
-                    _logger.InformationLog("User with "+id+" not found", "Delete User", "", GetCurrentUserAsync().Result.UserName);
+                    _logger.InformationLog("User with " + id + " not found", "Delete User", "",
+                        GetCurrentUserAsync().Result.UserName);
                     return Json(false);
                 }
 
@@ -340,18 +347,21 @@ namespace Itsomax.Module.UserManagement.Controllers
                     var res = await _userManager.DeleteAsync(user);
                     if (res.Succeeded)
                     {
-                        _logger.InformationLog("User"+user.UserName+" deleted succesfully", "Delete User", AddErrorList(res), GetCurrentUserAsync().Result.UserName);
+                        _logger.InformationLog("User" + user.UserName + " deleted succesfully", "Delete User",
+                            AddErrorList(res), GetCurrentUserAsync().Result.UserName);
                         return Json(true);
                     }
                     else
                     {
-                        _logger.InformationLog("User " + user.UserName + " not deleted succesfully", "Delete User", AddErrorList(res), GetCurrentUserAsync().Result.UserName);
+                        _logger.InformationLog("User " + user.UserName + " not deleted succesfully", "Delete User",
+                            AddErrorList(res), GetCurrentUserAsync().Result.UserName);
                         return Json(false);
                     }
                 }
                 catch(Exception ex)
                 {
-                    _logger.ErrorLog(ex.Message, "Delete User", ex.InnerException.Message, GetCurrentUserAsync().Result.UserName);
+                    _logger.ErrorLog(ex.Message, "Delete User", ex.InnerException.Message,
+                        GetCurrentUserAsync().Result.UserName);
                     return Json(false);
                 }
                 
@@ -392,11 +402,12 @@ namespace Itsomax.Module.UserManagement.Controllers
             }
             catch(Exception ex)
             {
-                _toastNotification.AddErrorToastMessage("An error ocurred: "+ex.Message, new ToastrOptions()
+                _toastNotification.AddErrorToastMessage("An error ocurred: "+ex.Message, new ToastrOptions
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
-                _logger.ErrorLog(ex.Message, "Active user list", ex.InnerException.Message, GetCurrentUserAsync().Result.UserName);
+                _logger.ErrorLog(ex.Message, "Active user list", ex.InnerException.Message,
+                    GetCurrentUserAsync().Result.UserName);
                 return Json(false);
             }
             
@@ -416,7 +427,7 @@ namespace Itsomax.Module.UserManagement.Controllers
             var res = _userManager.ChangePasswordAsync(currentUser, model.CurrentPassword, model.NewPassword).Result;
             if(res.Succeeded)
             {
-                _toastNotification.AddSuccessToastMessage("Your password has been changed succesfully",new ToastrOptions()
+                _toastNotification.AddSuccessToastMessage("Your password has been changed succesfully",new ToastrOptions
                 {
                     PositionClass=ToastPositions.TopCenter
                 });
@@ -425,11 +436,12 @@ namespace Itsomax.Module.UserManagement.Controllers
             }
             else
             {
-                _toastNotification.AddErrorToastMessage("There was a problem changing your password",new ToastrOptions()
+                _toastNotification.AddErrorToastMessage("There was a problem changing your password",new ToastrOptions
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
-                _logger.InformationLog("Own password change succesfully", "Own password not change", AddErrorList(res), GetCurrentUserAsync().Result.UserName);
+                _logger.InformationLog("Own password change succesfully", "Own password not change", AddErrorList(res),
+                    GetCurrentUserAsync().Result.UserName);
                 ModelState.AddModelError(nameof(ChangePasswordViewModel.NewPassword), AddErrorList(res));
                 return View(nameof(ChangePasswordView),model);
             }
@@ -461,7 +473,8 @@ namespace Itsomax.Module.UserManagement.Controllers
         {
             if(model.NewPassword == string.Empty)
             {
-                _toastNotification.AddWarningToastMessage("Your password has not been changed, please try a new one", new ToastrOptions()
+                _toastNotification.AddWarningToastMessage("Your password has not been changed, please try a new one", 
+                    new ToastrOptions
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
@@ -476,16 +489,19 @@ namespace Itsomax.Module.UserManagement.Controllers
             var res =  await _userManager.ResetPasswordAsync(user,token,model.NewPassword);
             if (res.Succeeded)
             {
-                _toastNotification.AddSuccessToastMessage("Password for user " + user.UserName + " changed succesfully", new ToastrOptions()
+                _toastNotification.AddSuccessToastMessage("Password for user " + user.UserName + " changed succesfully", 
+                    new ToastrOptions
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
-                _logger.InformationLog("User " + user.UserName + " password changed succesfully", "Password Change", AddErrorList(res), GetCurrentUserAsync().Result.UserName);
+                _logger.InformationLog("User " + user.UserName + " password changed succesfully", "Password Change",
+                    AddErrorList(res), GetCurrentUserAsync().Result.UserName);
                 return RedirectToAction(nameof(ListActiveUsers));
             }
             else
             {
-                _logger.InformationLog("User "+user.UserName+" password not changed succesfully", "Password Change", AddErrorList(res), GetCurrentUserAsync().Result.UserName);
+                _logger.InformationLog("User " + user.UserName + " password not changed succesfully", "Password Change",
+                    AddErrorList(res), GetCurrentUserAsync().Result.UserName);
                 ModelState.AddModelError(nameof(ChangePasswordViewModel.NewPassword),AddErrorList(res));
                 return View("ChangePasswordUserView", model);
             }
