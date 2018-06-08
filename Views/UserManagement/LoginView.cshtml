@@ -1,5 +1,7 @@
-﻿@model LoginUserViewModel
+﻿@using Itsomax.Module.Core.Interfaces
+@model LoginUserViewModel
 @inject SignInManager<User> SignInManager
+@inject GetSettings GetSettings
 
 @{
     Layout=null;
@@ -9,7 +11,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Log in</title>
+    <title>Login into @GetSettings.SystemTitle()</title>
     <!-- Tell the browser to be responsive to screen width -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
@@ -32,7 +34,7 @@
     <section id="wrapper" class="login-register login-sidebar" style="background-image:url(/assets/images/background/dsc06904.jpg);">
         <div class="login-box card">
             <div class="card-body">
-                <h4 class="card-title text-center">Login into Agr&iacute;cola Las Camelias</h4>
+                <h4 class="card-title text-center">Login into @GetSettings.SystemLoginText()</h4>
                 <form autocomplete="off" asp-controller="UserManagement" asp-action="LoginView" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" class="form-horizontal form-material">
                     <div class="form-group m-t-40">
                         <div class="col-xs-12">
