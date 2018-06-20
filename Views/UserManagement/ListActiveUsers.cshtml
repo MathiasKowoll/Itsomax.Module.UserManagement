@@ -31,7 +31,7 @@
     <script>
         $(document).ready(function () {
             var table = $('#users').DataTable({
-                dom: 'Bfrtip',
+                dom: 'Bfrtlp',
                 ajax: {
                     url: '/get/all/active/users/json/',
                     dataSrc: ''
@@ -74,7 +74,7 @@
                     { "data": "updated" }
                 ],
                 paging: true,
-                lengthChange: false,
+                lengthChange: true,
                 searching: true,
                 ordering: true,
                 info: true,

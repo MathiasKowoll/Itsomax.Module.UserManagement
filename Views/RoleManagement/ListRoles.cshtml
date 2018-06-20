@@ -27,7 +27,7 @@
     <script>
         $(document).ready(function() {
                 var table =$('#roles').DataTable({
-                    dom: 'Bfrtip',
+                    dom: 'Bfrtlp',
                     ajax: {
                         url: '/get/all/active/roles/json/',
                         dataSrc: ''
@@ -37,7 +37,7 @@
                         { "data": "roleName" }
                     ],
                     paging: true,
-                    lengthChange: false,
+                    lengthChange: true,
                     searching: false,
                     ordering: true,
                     info: true,
