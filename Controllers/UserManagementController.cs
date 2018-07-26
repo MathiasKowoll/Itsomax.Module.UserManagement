@@ -66,9 +66,14 @@ namespace Itsomax.Module.UserManagement.Controllers
                     });
                     return RedirectToAction("ListActiveUsers");
                 }
-                _toastNotification.AddErrorToastMessage(res.Errors, new ToastrOptions
+                _toastNotification.AddWarningToastMessage(res.Errors, new ToastrOptions
                 {
                     PositionClass = ToastPositions.TopCenter
+                });
+                model.RolesList = _roleManager.Roles.ToList().Select(x => new SelectListItem()
+                {
+                    Value = x.Name,
+                    Text = x.Name
                 });
                 return View(nameof(CreateUser),model);
 
