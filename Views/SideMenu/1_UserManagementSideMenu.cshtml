@@ -26,4 +26,7 @@
         </ul>
     </li>
 }
-<hr class="m-t-0 m-b-40">
+@if ((User.HasClaim(c => c.Value.ToString() == "HasAccess" && (c.Type.Contains("User") || c.Type.Contains("Role"))) || User.IsInRole("Admin")))
+{
+    <hr class="m-t-0 m-b-40">
+}
