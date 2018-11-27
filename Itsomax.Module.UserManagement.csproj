@@ -7,9 +7,6 @@
     <Description>Module to manage users, roles and permitions over modules</Description>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.NETCore.App" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Itsomax.Module.UserCore\Itsomax.Module.UserCore.csproj" />
   </ItemGroup>
 </Project>
