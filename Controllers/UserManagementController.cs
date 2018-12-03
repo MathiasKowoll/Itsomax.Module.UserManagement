@@ -437,7 +437,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                     PositionClass=ToastPositions.TopCenter
                 });
                 _logger.InformationLog("Own password change succesfully", "Own password change");
-                return RedirectPermanent("/Admin/WelcomePage");
+                return RedirectPermanent("/Admin/Welcome");
             }
             else
             {
