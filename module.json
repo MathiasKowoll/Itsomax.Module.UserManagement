@@ -1,6 +1,7 @@
 {
-  "name": "usermanagement",
-  "fullName": "Itsomax.Module.UserManagement",
+  "id": "Itsomax.Module.UserManagement",
+  "name": "UserManagement",
+  "isBundledWithHost": false,
   "version": "1.0.0",
-  "project":  "All" 
+  "project":  "All"
 }
