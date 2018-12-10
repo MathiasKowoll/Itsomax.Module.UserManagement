@@ -1,18 +1,19 @@
 using System;
-using Microsoft.AspNetCore.Mvc;
+using System.Linq;
+using System.Threading.Tasks;
+using Itsomax.Data.Infrastructure.Data;
+using Itsomax.Module.Core.Data;
+using Itsomax.Module.Core.Extensions.CommonHelpers;
+using Itsomax.Module.Core.Interfaces;
+using Itsomax.Module.Core.Models;
 using Itsomax.Module.UserCore.Interfaces;
 using Itsomax.Module.UserCore.ViewModels;
-using Itsomax.Module.Core.Interfaces;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Itsomax.Module.Core.Models;
-using Itsomax.Data.Infrastructure.Data;
-using System.Linq;
-using Itsomax.Module.Core.Data;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Itsomax.Module.Core.Extensions.CommonHelpers;
 using NToastNotify;
+
 //using NToastNotify.Libraries;
 
 
