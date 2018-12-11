@@ -211,16 +211,14 @@ namespace Itsomax.Module.UserManagement.Controllers
                     });
                     return RedirectToAction("ListRoles");
                 }
-                else
-                {
-                    _toastNotification.AddErrorToastMessage(res.Errors, new ToastrOptions()
-                    {
-                        PositionClass = ToastPositions.TopCenter
-                    });
-                    return View(nameof(EditRoleView),model);
-                }
 
-               
+                _toastNotification.AddErrorToastMessage(res.Errors, new ToastrOptions()
+                {
+                    PositionClass = ToastPositions.TopCenter
+                });
+                return Redirect("/get/role/"+model.Id);
+
+
             }
             _toastNotification.AddErrorToastMessage("Could not edit role: " + model.RoleName, new ToastrOptions
             {
