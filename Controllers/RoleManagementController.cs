@@ -53,7 +53,7 @@ namespace Itsomax.Module.UserManagement.Controllers
             try
             {
                 
-                modulelist.ModuleList = _subModule.Query().Select(x => new SelectListItem
+                modulelist.ModuleList = _subModule.Query().Where(x => x.ActiveSubModule).Select(x => new SelectListItem
                 {
                     Value = x.Name,
                     Text = StringHelperClass.CamelSplit(x.Name)
@@ -92,7 +92,7 @@ namespace Itsomax.Module.UserManagement.Controllers
                     {
                         foreach (var item in selectedModules)
                         {
-                            var mod = _subModule.Query().FirstOrDefault(x => x.Name.Contains(item));
+                            var mod = _subModule.Query().Where(x => x.ActiveSubModule).FirstOrDefault(x => x.Name.Contains(item));
                             if (mod != null)
                             {
                                 ModuleRole modrole = new ModuleRole
@@ -127,22 +127,17 @@ namespace Itsomax.Module.UserManagement.Controllers
                     }
 
                 }
-                else
-                {
-                    _toastNotification.AddErrorToastMessage("Could not create role: " + model.RoleName, 
-                        new ToastrOptions
+                _toastNotification.AddErrorToastMessage("Could not create role: " + model.RoleName, 
+                    new ToastrOptions
                     {
                         PositionClass = ToastPositions.TopCenter
                     });
-                    _logger.InformationLog("Could not create role: " + model.RoleName, "Create Role", string.Empty,
-                        GetCurrentUserAsync().Result.UserName);
-                    return View(nameof(CreateRole), model);
-                }
-            }
-            else
-            {
+                _logger.InformationLog("Could not create role: " + model.RoleName, "Create Role", string.Empty,
+                    GetCurrentUserAsync().Result.UserName);
                 return View(nameof(CreateRole), model);
             }
+
+            return View(nameof(CreateRole), model);
         }
         [HttpGet]
         [Route("/get/all/active/roles/json/")]
@@ -160,7 +155,7 @@ namespace Itsomax.Module.UserManagement.Controllers
             }
             catch(Exception ex)
             {
-                _toastNotification.AddErrorToastMessage("An error ocurred", new ToastrOptions
+                _toastNotification.AddErrorToastMessage("An error occurred", new ToastrOptions
                 {
                     PositionClass = ToastPositions.TopCenter
                 });
